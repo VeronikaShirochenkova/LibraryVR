@@ -11,8 +11,8 @@ public class UIController : MonoBehaviour
     [SerializeField] private ActionBasedController _actionBasedController;
     [SerializeField] private XRDirectInteractor _xrDirectInteractor;
     [SerializeField] private InputActionReference _UIActionRef;
-
-    // Start is called before the first frame update
+    
+    
     private void OnEnable()
     {
         _UIActionRef.action.performed += _UIModeActivate;
