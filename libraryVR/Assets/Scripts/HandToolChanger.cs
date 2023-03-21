@@ -5,7 +5,7 @@ using UnityEngine;
 using UnityEngine.InputSystem;
 using UnityEngine.UI;
 
-public class ToggleObject : MonoBehaviour
+public class HandToolChanger : MonoBehaviour
 {
     public InputActionReference toggleReference;
 
