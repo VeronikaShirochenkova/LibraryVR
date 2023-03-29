@@ -34,7 +34,7 @@ public class UIController : MonoBehaviour
     {
         _xrDirectInteractor.enabled = true;
 
-        _xrRayInteractor.enabled = false;
+        //_xrRayInteractor.enabled = false;
         _actionBasedController.enableInputActions = false;
     }
 

@@ -17,4 +17,5 @@ public class BookDisplay : MonoBehaviour
         bookDescription.text = book.Author;
         //bookCover.sprite = 
     }
+    
 }
