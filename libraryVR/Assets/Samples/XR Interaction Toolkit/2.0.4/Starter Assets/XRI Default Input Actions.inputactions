@@ -1085,7 +1085,7 @@
                     "name": "",
                     "id": "d6c08c3d-3d41-4695-994d-1ac9016a5a9e",
                     "path": "<XRController>{RightHand}/Primary2DAxis",
-                    "interactions": "Sector(directions=12,sweepBehavior=1),Sector(directions=2,sweepBehavior=2)",
+                    "interactions": "Sector(directions=12,sweepBehavior=1)",
                     "processors": "",
                     "groups": "Generic XR Controller",
                     "action": "Turn",
@@ -1132,7 +1132,7 @@
                 {
                     "name": "",
                     "id": "eada86ac-0264-4d8d-872e-7052dbb1db3e",
-                    "path": "<XRController>{LeftHand}/trigger",
+                    "path": "<XRController>{RightHand}/trigger",
                     "interactions": "",
                     "processors": "",
                     "groups": "",
