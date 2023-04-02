@@ -1,158 +1,117 @@
-using System.Collections;
-using System.Collections.Generic;
-using System.Net.Mime;
-using System.Reflection.Emit;
 using TMPro;
 using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.InputSystem;
-using UnityEngine.TextCore.Text;
-using UnityEngine.UI;
-using UnityEngine.UIElements;
 using UnityEngine.XR.Interaction.Toolkit;
 
 public class TextHighlighter : MonoBehaviour
 {
-    [SerializeField] private XRRayInteractor rayUI;
-    [SerializeField] private InputActionReference actionReference;
-    [SerializeField] private TMP_Text leftPage;
-    //[SerializeField] private TMP_Text rightPage;
-    [SerializeField] private GameObject book;
-
-
-    private int head;
-    private int tail;
+    [SerializeField] private XRRayInteractor rayUI;                     // used like marker
+    [SerializeField] private InputActionReference actionReference;      // trigger button action
+    [SerializeField] private TMP_Text page;                             // ref to page which display text
+    [SerializeField] private GameObject marker;                         // marker mesh
     
+    // indices of first and last char of word which will be highlighted
+    private int _head;
+    private int _tail;
+    
+    // highlighting color
+    private Color _color;
 
-    void Start()
+
+    private void Start()
     {
+        _head = -1;
+        _tail = -1;
+        _color = new Color32(255, 128, 0, 255);
+        
         // cause in 1st frame it's null
-        leftPage.ForceMeshUpdate();
-        head = -1;
-        tail = -1;
+        page.ForceMeshUpdate();
     }
-    
-        // Update is called once per frame
-    void Update()
+
+    private void Update()
     {
         float value = actionReference.action.ReadValue<float>();
-        if (value >= 0.6f)
+        if (value >= 0.6f && marker.activeSelf) // if button almost pressed -> start highlighted text
         {
             HighlightText();
         }
-
-
-        //bool b = rayInteractor.TryGetCurrentUIRaycastResult(out hitInfo);
-
-        //if (b)
-        //{
-        //    Debug.Log("get");
-        //    for (int i = 0; i < text.text.Length; i++)
-        //    {
-        //        TMP_CharacterInfo cInfo = text.textInfo.characterInfo[i];
-        //        Vector3 bottomLeft = cInfo.bottomLeft;
-        //        Vector3 bottomRight = cInfo.bottomRight;
-        //        Vector3 topLeft = cInfo.topLeft;
-        //        Vector3 topRight = cInfo.topRight;
-        //                    
-        //        Vector3 worldBottomLeft = transform.TransformPoint(bottomLeft);
-        //        Vector3 worldBottomRight = transform.TransformPoint(bottomRight);
-        //        Vector3 worldTopLeft = transform.TransformPoint(topLeft);
-        //        Vector3 worldTopRight = transform.TransformPoint(topRight);
-        //        
-        //        bool res = PointInsideRectangle(hitInfo.worldPosition, worldBottomLeft, worldTopLeft, worldTopRight, worldBottomRight);
-        //        if (res)
-        //        {
-        //            Debug.Log("Change color");
-        //            Color color = new Color32(255, 128, 0, 255);
-        //            TMP_CharacterInfo firstChar = text.textInfo.characterInfo[i];
-        //            text.textInfo.meshInfo[firstChar.materialReferenceIndex].colors32[firstChar.vertexIndex] = color;
-        //            text.textInfo.meshInfo[firstChar.materialReferenceIndex].colors32[firstChar.vertexIndex + 1] = color;
-        //            text.textInfo.meshInfo[firstChar.materialReferenceIndex].colors32[firstChar.vertexIndex + 2] = color;
-        //            text.textInfo.meshInfo[firstChar.materialReferenceIndex].colors32[firstChar.vertexIndex + 3] = color;
-        //            text.UpdateVertexData(TMP_VertexDataUpdateFlags.Colors32);
-        //            
-        //            
-        //        }
-        //    }
-        //}
-
-
     }
     
     private void HighlightText()
     {
         RaycastResult hitInfo;
         bool b = rayUI.TryGetCurrentUIRaycastResult(out hitInfo);
-
+        
+        // if ray hit UI element
         if (b)
         {
-            int frstChar = leftPage.textInfo.pageInfo[leftPage.pageToDisplay - 1].firstCharacterIndex;
-            int lastChar = leftPage.textInfo.pageInfo[leftPage.pageToDisplay - 1].lastCharacterIndex;
+            // get indices of first and last char on current page 
+            var firstChar = page.textInfo.pageInfo[page.pageToDisplay - 1].firstCharacterIndex;
+            var lastChar = page.textInfo.pageInfo[page.pageToDisplay - 1].lastCharacterIndex;
                 
-            for (int i = frstChar; i < lastChar; i++)
+            for (var i = firstChar; i < lastChar; i++)
             {
-                TMP_CharacterInfo cInfo = leftPage.textInfo.characterInfo[i];
-
+                TMP_CharacterInfo cInfo = page.textInfo.characterInfo[i];
+                
+                // get word position of char
                 Vector3 worldBottomLeft = transform.TransformPoint(cInfo.bottomLeft);
                 Vector3 worldBottomRight = transform.TransformPoint(cInfo.bottomRight);
                 Vector3 worldTopLeft = transform.TransformPoint(cInfo.topLeft);
                 Vector3 worldTopRight = transform.TransformPoint(cInfo.topRight);
                     
+                // check if ray hit this char
                 bool res = PointInsideRectangle(hitInfo.worldPosition, worldBottomLeft, worldTopLeft, worldTopRight, worldBottomRight);
+                
                 if (res)
                 {
-                    Color color = new Color32(255, 128, 0, 255);
-
-                    if (leftPage.textInfo.meshInfo[cInfo.materialReferenceIndex].colors32[cInfo.vertexIndex] != color)
+                    // if char isn't highlighted yet
+                    if (page.textInfo.meshInfo[cInfo.materialReferenceIndex].colors32[cInfo.vertexIndex] != _color)
                     {
-                        FindWordBorders(i, frstChar, lastChar);
-                        if (tail == -1 || head == -1) continue;
-                        for (int j = head; j <= tail; j++)
+                        // find all chars in this word
+                        FindWordBorders(i, firstChar, lastChar);
+                        if (_tail == -1 || _head == -1) continue;
+                        
+                        // highlight word
+                        for (var j = _head; j <= _tail; j++)
                         {
-                            //Color color = new Color32(255, 128, 0, 255);
-                            TMP_CharacterInfo ch = leftPage.textInfo.characterInfo[j];
-                            leftPage.textInfo.meshInfo[ch.materialReferenceIndex].colors32[ch.vertexIndex] = color;
-                            leftPage.textInfo.meshInfo[ch.materialReferenceIndex].colors32[ch.vertexIndex + 1] = color;
-                            leftPage.textInfo.meshInfo[ch.materialReferenceIndex].colors32[ch.vertexIndex + 2] = color;
-                            leftPage.textInfo.meshInfo[ch.materialReferenceIndex].colors32[ch.vertexIndex + 3] = color;
-                            leftPage.UpdateVertexData(TMP_VertexDataUpdateFlags.Colors32);
+                            TMP_CharacterInfo ch = page.textInfo.characterInfo[j];
+                            page.textInfo.meshInfo[ch.materialReferenceIndex].colors32[ch.vertexIndex] = _color;
+                            page.textInfo.meshInfo[ch.materialReferenceIndex].colors32[ch.vertexIndex + 1] = _color;
+                            page.textInfo.meshInfo[ch.materialReferenceIndex].colors32[ch.vertexIndex + 2] = _color;
+                            page.textInfo.meshInfo[ch.materialReferenceIndex].colors32[ch.vertexIndex + 3] = _color;
+                            page.UpdateVertexData(TMP_VertexDataUpdateFlags.Colors32);
                         }
+                        
+                        // reset indices
+                        _head = -1;
+                        _tail = -1;
                     }
                 }
             }
         }
     }
 
-    private void FindWordBorders(int charIdx, int frstChar, int lastChar)
+    private void FindWordBorders(int charIdx, int firstChar, int lastChar)
     {
-        head = charIdx;
-        tail = charIdx;
-        if (leftPage.text[charIdx] == ' ' || leftPage.text[charIdx] == '\n')
-        {
-            return;
-        }
+        _head = charIdx;
+        _tail = charIdx;
+        
+        if (page.text[charIdx] == ' ' || page.text[charIdx] == '\n') return;
 
-        for (int i = charIdx-1; i >= frstChar; i--)
+        // find head
+        for (var i = charIdx-1; i >= firstChar; i--)
         {
-            if (leftPage.text[i] == ' ' || leftPage.text[i] == '\n')
-            {
-                break;
-            }
-
-            head = i;
-        }
-        // find tail 
-        for (int i = charIdx+1; i <= lastChar; i++)
-        {
-            if (leftPage.text[i] == ' ' || leftPage.text[i] == '\n')
-            {
-                break;
-            }
-
-            tail = i;
+            if (page.text[i] == ' ' || page.text[i] == '\n') break;
+            _head = i;
         }
         
+        // find tail 
+        for (var i = charIdx+1; i <= lastChar; i++)
+        {
+            if (page.text[i] == ' ' || page.text[i] == '\n') break;
+            _tail = i;
+        }
     }
 
 

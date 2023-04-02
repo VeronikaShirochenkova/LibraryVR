@@ -11,23 +11,16 @@ using VersOne.Epub;
 
 public class TextDisplay : MonoBehaviour
 {
-    [SerializeField] private TMP_InputField leftPage;
-    [SerializeField] private TMP_InputField rightPage;
-    [SerializeField] private TMP_InputField contentPage;
-    
+    [SerializeField] private TMP_Text leftPage;
+    [SerializeField] private TMP_Text rightPage;
+
     private string _filePath;                   // book file path
-    //private static EpubBook _book;              
-    
-    //private List<string> _tableOfContent;
     private List<Chapter> _stringChapters;
-    //private Dictionary<string, EpubTextContentFile> _htmlChapters;
-
-
-    private TMP_Text _leftText;
-    private TMP_Text _rightText;
     
+
     private int _pageCount;
     private int _currentPage;
+    private int _currentChapter;
 
 
     void Start()
@@ -36,59 +29,102 @@ public class TextDisplay : MonoBehaviour
         //_book = EpubReader.ReadBook(_filePath);
         
         // _filePath = Application.dataPath + "/Resources/Books/Fahrenheit451/Fahrenheit451_EN.epub";       // ok
-         _filePath = Application.dataPath + "/Resources/Books/BraveNewWorld/BraveNewWorld_EN.epub";       // ok
-        // _filePath = Application.dataPath + "/Resources/Books/NineteenEightyFour/1984_EN.epub";             // ok
+        // _filePath = Application.dataPath + "/Resources/Books/BraveNewWorld/BraveNewWorld_EN.epub";       // ok
+         _filePath = Application.dataPath + "/Resources/Books/NineteenEightyFour/1984_EN.epub";             // ok
 
 
         EPubBookReader reader = new EPubBookReader(_filePath);
         _stringChapters = reader.GetAllChapters();
+
+        _currentChapter = 0;
+        SetChapter(_currentChapter, false);
+
+
+    }
+
+    public List<string> GetTableOfContent()
+    {
+        List<string> tableOfContent = new List<string>();
         
+        for (int i = 0; i < _stringChapters.Count; i++)
+        {
+            tableOfContent.Add(_stringChapters[i].title);
+        }
         
-        // get text component
-        _leftText = leftPage.GetComponentInChildren<TMP_Text>();
-        _rightText = rightPage.GetComponentInChildren<TMP_Text>();
+        return tableOfContent;
+    }
+
+    // PAGES / CHAPTERS
+    public void SetChapter(int index, bool byContent)
+    {
+        if (index < 0) return;
+        if (index >= _stringChapters.Count) return;
+
         
-        leftPage.text = _stringChapters[1].text;
-        rightPage.text = _stringChapters[1].text;
-        
+        leftPage.text = _stringChapters[index].text;
+        rightPage.text = _stringChapters[index].text;
         // Need it because in the first frame it's null 
-        _leftText.ForceMeshUpdate();
-        _rightText.ForceMeshUpdate();
-        
-        SetStartPages();
-        
+        leftPage.ForceMeshUpdate();
+        rightPage.ForceMeshUpdate();
 
-        // _book = EpubReader.ReadBook(_filePath);
-        //
-        // _stringChapters = new List<Chapter>();
-        // _htmlChapters = _book.Content.Html;
-
-        //GetChapters();
+        if (index >= _currentChapter || byContent == true)
+        {
+            _currentChapter = index;
+            SetStartPages();
+        }
+        else if(index < _currentChapter)
+        {
+            _currentChapter = index;
+            SetPrevPages();
+        }
+        
     }
     
+    /**
+     * Reset current page number/page count
+     */
     private void SetStartPages()
     {
         _currentPage = 1;
-        _leftText.pageToDisplay = _currentPage;
-        _pageCount = _leftText.textInfo.pageCount;
+        leftPage.pageToDisplay = _currentPage;
+        _pageCount = leftPage.textInfo.pageCount;
 
         if (_pageCount == 1)
         {
             rightPage.text = "";
-            _rightText.pageToDisplay = 0;
+            rightPage.pageToDisplay = 2;
         }
         else
         {
-            _rightText.pageToDisplay = _currentPage + 1;
+            rightPage.pageToDisplay = _currentPage + 1;
         }
     }
+
+    private void SetPrevPages()
+    {
+        _currentPage = 1;
+        leftPage.pageToDisplay = _currentPage;
+        _pageCount = leftPage.textInfo.pageCount;
+
+
+        _pageCount = (_pageCount % 2 == 0) ? _pageCount : _pageCount + 1;
+
+        _currentPage = _pageCount - 1;
+
+        leftPage.pageToDisplay = _currentPage;
+        rightPage.pageToDisplay = _currentPage + 1;
+
+    }
     
+    /**
+     * show previous page
+     */
     public void PreviousPage()
     {
         if (_currentPage >= 3)
         {
-            _leftText.pageToDisplay = _currentPage - 2;
-            _rightText.pageToDisplay = _currentPage - 1;
+            leftPage.pageToDisplay = _currentPage - 2;
+            rightPage.pageToDisplay = _currentPage - 1;
             _currentPage -= 2;
         }
         else
@@ -97,13 +133,16 @@ public class TextDisplay : MonoBehaviour
         }
     }
     
+    /**
+     * show next page
+     */
     public void NextPage()
     {
         int pageCount = (_pageCount % 2 == 0) ? _pageCount : _pageCount + 1;
         if (_currentPage <= pageCount - 3)
         {
-            _leftText.pageToDisplay = _currentPage + 2;
-            _rightText.pageToDisplay = _currentPage + 3;
+            leftPage.pageToDisplay = _currentPage + 2;
+            rightPage.pageToDisplay = _currentPage + 3;
             _currentPage += 2;
         }
         else
@@ -111,92 +150,18 @@ public class TextDisplay : MonoBehaviour
             GetNextChapter();
         }
     }
-
+    
+    
     private void GetNextChapter()
     {
-        Debug.Log("Get Next Chapter");
+        SetChapter(_currentChapter + 1, false);
     }
 
     private void GetPreviousChapter()
     {
-        Debug.Log("Get Previous Chapter");
+        SetChapter(_currentChapter - 1, false);
     }
     
     
     
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-
-    // private void ShowTableOfContent()
-    // {
-    //     throw new System.NotImplementedException();
-    // }
-
-
-    // /**
-    //  * go through the book get table of content
-    //  */
-    // void GetTableOfContent()
-    // {
-    //     using (EpubBookRef bookRef = EpubReader.OpenBook(_filePath))
-    //     {
-    //         foreach (EpubNavigationItemRef navigationItemRef in bookRef.GetNavigation())
-    //         {
-    //             PrintNavigationItem(navigationItemRef);
-    //         }
-    //     }
-    // }
-    //
-    // /**
-    //  * get parts of table of contents
-    //  */
-    // private void PrintNavigationItem(EpubNavigationItemRef navigationItemRef)
-    // {
-    //     _tableOfContent.Add(navigationItemRef.Title + '\n');
-    //     foreach (EpubNavigationItemRef nestedNavigationItemRef in navigationItemRef.NestedItems)
-    //     {
-    //         PrintNavigationItem(nestedNavigationItemRef);
-    //     }
-    // }
-    
-    // /**
-    //  * Go through all chapters
-    //  */
-    // private void GetChapters()
-    // {
-    //     foreach (string key in _htmlChapters.Keys)
-    //     {
-    //         ConvertHtmlChapterToString(_htmlChapters[key]);
-    //     }
-    // }
-    //
-    //
-    // private void ConvertHtmlChapterToString(EpubTextContentFile htmlText)
-    // {
-    //     HtmlDocument htmlDocument = new();
-    //     htmlDocument.LoadHtml(htmlText.Content);
-    //     StringBuilder sb = new();
-    //     sb.AppendLine(htmlDocument.DocumentNode.SelectSingleNode("//body").InnerText.Trim());
-    //
-    //     string contentText = sb.ToString();
-    //     if (contentText.Length != 0)
-    //     {
-    //         Chapter ch = new Chapter(contentText);
-    //         if (ch.name.Length != contentText.Length)
-    //         {
-    //             _stringChapters.Add(ch);
-    //             ch.index = _stringChapters.Count - 1;
-    //         }
-    //     }
-    // }
-
-  
 }
