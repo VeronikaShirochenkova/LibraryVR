@@ -1,94 +1,110 @@
 using System;
-using System.Collections;
 using System.Collections.Generic;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
-using UnityEngine.XR.Interaction.Toolkit;
 
-public class TableOfContentManager : MonoBehaviour
+namespace BookScripts
 {
-    public GameObject buttonPrefab;
-    public GameObject buttonParent;
-    public TextDisplay book;
-    public GameObject previousButton;
-    public GameObject nextButton;
-    
-    
-    private List<string> _tableOfContent;
-    private List<GameObject> _buttons;
-
-    private int _numOfChapters;
-    private int _pageCount;
-    private int _currentPage;
-    
-    void Start()
+    public class TableOfContentManager : MonoBehaviour
     {
-        _buttons = new List<GameObject>();
-        _tableOfContent = book.GetTableOfContent();
+        public GameObject buttonPrefab;
+        public GameObject buttonParent;
         
-        for (var i = 0; i < _tableOfContent.Count; i++)
-        {
-            var newButton = Instantiate(buttonPrefab, buttonParent.transform);
-            newButton.name = i.ToString();
-            newButton.GetComponentInChildren<TMP_Text>().text = _tableOfContent[i];
-            newButton.GetComponent<Button>().onClick.AddListener(() => SelectChapter(Convert.ToInt32(newButton.name)));
-            _buttons.Add(newButton);
-        }
+        public TextDisplay book;
+        
+        public GameObject previousButton;
+        public GameObject nextButton;
+        
+        private List<string> _tableOfContent;
+        private List<GameObject> _buttons;
 
-        _currentPage = 0;
-        SetPages();
-    }
+        private int _numOfChapters;
+        private int _pageCount;
+        private int _currentPage;
     
-    public void ShowNextPage()
-    {
-        if(_currentPage == _pageCount-1) return;
-        ChangeVisible();
-        _currentPage++;
-        ChangeVisible();
-    }
-
-    public void ShowPreviousPage()
-    {
-        if(_currentPage == 0) return;
-        ChangeVisible();
-        _currentPage--;
-        ChangeVisible();
-    }
-
-    private void SetPages()
-    {
-        _pageCount = _buttons.Count / 10;
-        if (_pageCount > 1)
+        void Start()
         {
-            _pageCount = (_buttons.Count % 10 == 0) ? _pageCount : _pageCount + 1;
+            _buttons = new List<GameObject>();
+            _tableOfContent = book.GetTableOfContent();
             
-            previousButton.SetActive(true);
-            nextButton.SetActive(true);
-            
-            for (int i = 10; i < _buttons.Count; i++)
+            // create button for each chapter
+            for (var i = 0; i < _tableOfContent.Count; i++)
             {
-                _buttons[i].SetActive(false);
+                var newButton = Instantiate(buttonPrefab, buttonParent.transform);
+                newButton.name = i.ToString();
+                newButton.GetComponentInChildren<TMP_Text>().text = _tableOfContent[i];
+                newButton.GetComponent<Button>().onClick.AddListener(() => SelectChapter(Convert.ToInt32(newButton.name)));
+                _buttons.Add(newButton);
+            }
+
+            _currentPage = 0;
+            SetPages();
+        }
+    
+        /**
+         * Show the next part of the chapter buttons in table of content
+         */
+        public void ShowNextPage()
+        {
+            if(_currentPage == _pageCount-1) return;
+            ChangeVisible();
+            _currentPage++;
+            ChangeVisible();
+        }
+        
+        /**
+         * Show the previous part of the chapter buttons in table of content
+         */
+        public void ShowPreviousPage()
+        {
+            if(_currentPage == 0) return;
+            ChangeVisible();
+            _currentPage--;
+            ChangeVisible();
+        }
+        
+        /**
+         * Check the count of buttons in table of content;
+         * Show buttons for turning pages if there are more that 10 buttons
+         */
+        private void SetPages()
+        {
+            _pageCount = _buttons.Count / 10;
+            if (_pageCount > 1)
+            {
+                _pageCount = (_buttons.Count % 10 == 0) ? _pageCount : _pageCount + 1;
+            
+                previousButton.SetActive(true);
+                nextButton.SetActive(true);
+            
+                for (int i = 10; i < _buttons.Count; i++)
+                {
+                    _buttons[i].SetActive(false);
+                }
+            }
+        }
+        
+        /**
+         * Call the function that display the selected chapter
+         */
+        private void SelectChapter(int index)
+        {
+            book.SetChapter(index, true);
+        }
+        
+        /**
+         * Change "activeSelf" parameter of the currently shown buttons
+         */
+        private void ChangeVisible()
+        {
+            int start = _currentPage * 10;
+            int end = (start+10 > _buttons.Count) ? _buttons.Count : start+10;
+        
+            for (int i = start; i < end; i++)
+            {
+                _buttons[i].SetActive(!_buttons[i].activeSelf);
             }
         }
     }
-
-    private void SelectChapter(int index)
-    {
-        //Debug.Log("Go to: " + index);
-        book.SetChapter(index, true);
-    }
-    
-
-    private void ChangeVisible()
-    {
-        int start = _currentPage * 10;
-        int end = (start+10 > _buttons.Count) ? _buttons.Count : start+10;
-        
-        for (int i = start; i < end; i++)
-        {
-            _buttons[i].SetActive(!_buttons[i].activeSelf);
-        }
-    }
-    
 }

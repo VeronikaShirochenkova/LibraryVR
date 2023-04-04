@@ -20,12 +20,18 @@ namespace BookScripts
             _htmlChapters = _book.Content.Html;
             GetChapters();
         }
-
+        
+        /**
+         * Return all chapters as list of strings
+         */
         public List<Chapter> GetAllChapters()
         {
             return _stringChapters;
         }
 
+        /**
+         * Get each chapter from epub file 
+         */
         private void GetChapters()
         {
             foreach (string key in _htmlChapters.Keys)
@@ -34,6 +40,9 @@ namespace BookScripts
             }
         }
         
+        /**
+         * Convert ech chapter from html to string
+         */
         private void ConvertHtmlChapterToString(EpubTextContentFile htmlText)
         {
             HtmlDocument htmlDocument = new();
@@ -45,7 +54,7 @@ namespace BookScripts
             if (contentText.Length != 0)
             {
                 Chapter ch = new Chapter(contentText);
-                if (ch.name.Length != contentText.Length)
+                if (ch.title.Length != contentText.Length)
                 {
                     _stringChapters.Add(ch);
                     ch.index = _stringChapters.Count - 1;
