@@ -9,21 +9,26 @@ namespace BookScripts
     [System.Serializable]
     public class UserData
     {
+        public int fontSize;
         public int chaptersCount;
-        
-         //public List<List<Note>> notes;
-         public List<ChapterWrapper> notes;
+        public List<ChapterWrapper> notes;
+        public List<PageWrapper> pages;
+
 
 
         public UserData(int chapsCount)
         {
             chaptersCount = chapsCount;
             notes = new List<ChapterWrapper>();
+            pages = new List<PageWrapper>();
             
             for (var i = 0; i < chapsCount; i++)
             {
                 notes.Add(new ChapterWrapper());
                 notes[i].notes = new List<Note>();
+                
+                pages.Add(new PageWrapper());
+                pages[i].pages = new List<int>();
             }
         }
 
@@ -37,8 +42,6 @@ namespace BookScripts
     [System.Serializable]
     public class Note
     {
-        //public int head;
-        //public int tail;
         public string highlightText;
         public string note;
 
@@ -53,5 +56,11 @@ namespace BookScripts
     public class ChapterWrapper
     {
         public List<Note> notes;
+    }
+    
+    [System.Serializable]
+    public class PageWrapper
+    {
+        public List<int> pages;
     }
 }

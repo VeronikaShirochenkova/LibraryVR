@@ -13,14 +13,14 @@ namespace BookScripts
     {
         [SerializeField] private XRRayInteractor rayUI;                     // used like marker
         [SerializeField] private InputActionReference actionReference;      // trigger button action
-        [SerializeField] private TMP_Text alphaPage;                        // ref to page that ray interacts with
         [SerializeField] private TMP_Text displayedPage;                    // ref to page which display text
         
         
         [SerializeField] private GameObject marker;                         // marker mesh
     
         // Notes
-        [SerializeField] private GameObject noteButton;
+        [SerializeField] private GameObject noteButtonSave;
+        [SerializeField] private GameObject noteButtonRemove;
         [SerializeField] private GameObject noteText;
         [SerializeField] private GameObject keyboard;
 
@@ -45,7 +45,6 @@ namespace BookScripts
             _alfaColor = new Color32(255, 128, 0, 0);
 
             // cause in 1st frame it's null
-            alphaPage.ForceMeshUpdate();
             displayedPage.ForceMeshUpdate();
         }
     
@@ -72,13 +71,14 @@ namespace BookScripts
             if (result)
             {
                 // get indices of first and last char on current page 
-                var firstChar = alphaPage.textInfo.pageInfo[alphaPage.pageToDisplay - 1].firstCharacterIndex;
-                var lastChar = alphaPage.textInfo.pageInfo[alphaPage.pageToDisplay - 1].lastCharacterIndex;
+                var firstChar = displayedPage.textInfo.pageInfo[displayedPage.pageToDisplay - 1].firstCharacterIndex;
+                var lastChar = displayedPage.textInfo.pageInfo[displayedPage.pageToDisplay - 1].lastCharacterIndex;
 
-                for (var i = firstChar; i <= lastChar; i++)
+                int i = firstChar;
+                while(i <= lastChar)
                 {
-                    TMP_CharacterInfo cInfo = alphaPage.textInfo.characterInfo[i];
-                    
+                    TMP_CharacterInfo cInfo = displayedPage.textInfo.characterInfo[i];
+
                     // get word position of char
                     Vector3 worldBottomLeft = transform.TransformPoint(cInfo.bottomLeft);
                     Vector3 worldBottomRight = transform.TransformPoint(cInfo.bottomRight);
@@ -95,7 +95,7 @@ namespace BookScripts
                     if (res)
                     {
                         // if char is a letter or punctuation mark and char isn't highlighted yet
-                        if (char.IsLetter(alphaPage.text[i]) && alphaPage.textInfo.meshInfo[cInfo.materialReferenceIndex].colors32[cInfo.vertexIndex] != _color)
+                        if (char.IsLetter(cInfo.character) && displayedPage.textInfo.meshInfo[cInfo.materialReferenceIndex].colors32[cInfo.vertexIndex] != _color)
                         {
                             // find all chars in this word
                             FindWordBorders(i, firstChar, lastChar);
@@ -106,14 +106,16 @@ namespace BookScripts
                                 _tail = -1;
                                 break;
                             }
-
+                    
                             // highlight word on alfa page
-                            HighlightWord(alphaPage, _alfaColor);
+                            HighlightWord(displayedPage, _color);
                             // highlight word on displayed page
                             ShowOnDisplayedPage();
                             
-                            // Show button which save new note
-                            if (!noteButton.activeSelf) {noteButton.SetActive(true);}
+                            // Show buttons which save/remove new note
+                            if (!noteButtonSave.activeSelf) {noteButtonSave.SetActive(true);}
+                            if (!noteButtonRemove.activeSelf) {noteButtonRemove.SetActive(true);}
+                            
                             // Show keyboard for typing text for note
                             if (!keyboard.activeSelf) {keyboard.SetActive(true);}
                             // Show input field for show text for note
@@ -124,6 +126,8 @@ namespace BookScripts
                             _tail = -1;
                         }
                     }
+
+                    i++;
                 }
             }
         }
@@ -144,40 +148,7 @@ namespace BookScripts
 
         private void ShowOnDisplayedPage()
         {
-            int wordLen = _tail - _head + 1;
-            
-            if (alphaPage.text.Substring(_head, wordLen) == displayedPage.text.Substring(_head, wordLen))
-            {
-                HighlightWord(displayedPage, _color);
-                textDisplay.words.Add((_head, _tail));
-            }
-            else
-            {
-                int path = 0;
-                bool tag = false;
-                
-                for (int i = 0; i < displayedPage.text.Length; i++)
-                {
-                    if (path == _head)
-                    {
-                        HighlightWord(displayedPage, _color);
-                        textDisplay.words.Add((i, (i + wordLen - 1)));
-                        break;
-                    }
-                    if (displayedPage.text[i] == '<')
-                    {
-                        tag = true;
-                        continue;
-                    }
-                    if (displayedPage.text[i] == '>')
-                    {
-                        tag = false;
-                        continue;
-                    }
-
-                    path = tag ? path : path + 1;
-                }
-            }
+            textDisplay.words.Add((displayedPage.textInfo.characterInfo[_head].index, displayedPage.textInfo.characterInfo[_tail].index));
         }
 
         /**
@@ -185,10 +156,13 @@ namespace BookScripts
          */
         private void FindWordBorders(int charIdx, int start, int end)
         {
+            
+
+            var ch = displayedPage.textInfo.characterInfo[charIdx];
             _head = charIdx;
             _tail = charIdx;
-            
-            if (!char.IsLetter(alphaPage.text[charIdx]))
+
+            if (!char.IsLetter(ch.character))
             {
                 _head = -1;
                 _tail = -1;
@@ -198,14 +172,14 @@ namespace BookScripts
             // find head
             for (var i = charIdx; i >= start; i--)
             {
-                if (!char.IsLetter(alphaPage.text[i])) break;
+                if (!char.IsLetter(displayedPage.textInfo.characterInfo[i].character)) break;
                 _head = i;
             }
         
             // find tail 
             for (var i = charIdx; i <= end; i++)
             {
-                if (!char.IsLetter(alphaPage.text[i])) break;
+                if (!char.IsLetter(displayedPage.textInfo.characterInfo[i].character)) break;
                 _tail = i;
             }
         }

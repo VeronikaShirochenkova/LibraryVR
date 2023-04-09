@@ -1,9 +1,11 @@
+using System;
 using System.Collections.Generic;
 using System.IO;
 using TMPro;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using UnityEngine.Serialization;
+using UnityEngine.UI;
 
 namespace BookScripts
 {
@@ -12,21 +14,26 @@ namespace BookScripts
         public SceneController sc;
         
         // Pages
-        [SerializeField] private TMP_Text leftAlphaPage;
         [SerializeField] private TMP_Text leftDisplayedPage;
-        
-        [SerializeField] private TMP_Text rightAlphaPage;
         [SerializeField] private TMP_Text rightDisplayedPage;
+        public TextSettings settings;
+        [SerializeField] private TMP_Text leftPageNumber;
+        [SerializeField] private TMP_Text rightPageNumber;
     
         // Notes
-        [SerializeField] private GameObject noteButton;
+        [SerializeField] private GameObject noteButtonSave;
+        [SerializeField] private GameObject noteButtonRemove;
         [SerializeField] private GameObject noteText;
         [SerializeField] private GameObject keyboard;
+        
+        public GameObject noteButtonPrefab;
+        public GameObject noteButtonParent;
+        private List<GameObject> _buttonNotes;
 
         public List<(int, int)> words;
 
-        private string tagStart;
-        private string tagEnd;
+        private string _tagStart;
+        private string _tagEnd;
     
         // JSON
         private string _jsonFilePath;
@@ -34,13 +41,12 @@ namespace BookScripts
     
         // Book
         private string _filePath;
-        private List<Chapter> _stringChapters;
+        public List<Chapter> stringChapters;
     
         private int _pageCount;
         private int _currentPage;
-        private int _currentChapter;
-
-
+        public int currentChapter;
+        
         void Start()
         {
             
@@ -52,12 +58,12 @@ namespace BookScripts
 
 
             EPubBookReader reader = new EPubBookReader(_filePath);
-            _stringChapters = reader.GetAllChapters();
+            stringChapters = reader.GetAllChapters();
             
             // Notes
             words = new List<(int, int)>();
-            tagStart = "<color=red>";
-            tagEnd = "</color>";
+            _tagStart = "<color=red>";
+            _tagEnd = "</color>";
 
             // JSON
             _jsonFilePath = Path.GetDirectoryName(_filePath) + "\\" + Path.GetFileNameWithoutExtension(_filePath) + ".json";
@@ -66,25 +72,59 @@ namespace BookScripts
             {
                 Debug.Log("Load data from JSON");
                 LoadUserData();
+                //SetFontSizeFromJson();
             }
             else
             {
                 Debug.Log("Create new user data");
-                _userData = new UserData(_stringChapters.Count);
+                _userData = new UserData(stringChapters.Count);
             }
 
             // set text
-            _currentChapter = 0;
-            SetChapter(_currentChapter, false);
+            currentChapter = 0;
+            SetChapter(currentChapter, false);
             
             
             keyboard.SetActive(false);
             noteText.SetActive(false);
+            
+            ShowAllNotes();
         }
         
         
         //=================== PAGES ========================
+        public void CountPagesNumber()
+        {
+            for(int ch = 0; ch < stringChapters.Count; ch++)
+            {
+                int fontSize = 0;
+                leftDisplayedPage.text = stringChapters[ch].text;
+                
+                for (int i = 0; i < settings.sizes.Count; i++)
+                {
+                    leftDisplayedPage.fontSize = settings.sizes[fontSize];
+                    leftDisplayedPage.ForceMeshUpdate();
+                    int pc = (leftDisplayedPage.textInfo.pageCount % 2 == 0) ? leftDisplayedPage.textInfo.pageCount : leftDisplayedPage.textInfo.pageCount + 1;
+                    _userData.pages[ch].pages.Add(pc);
+                    
+                    fontSize++;
+                }
+            }
+        }
         
+        public void ShowPageNumber()
+        {
+            int n = 0;
+
+            for (int i = 0; i < currentChapter; i++)
+            {
+                n += _userData.pages[i].pages[settings.currentFontSize];
+            }
+
+            leftPageNumber.text = (n + leftDisplayedPage.pageToDisplay).ToString();
+            rightPageNumber.text = (n + rightDisplayedPage.pageToDisplay).ToString();
+        }
+
         /**
          * Set the chapter by given index; Get two parameters:
          *  1) index of chapter
@@ -93,29 +133,27 @@ namespace BookScripts
         public void SetChapter(int index, bool byContent)
         {
             if (index < 0) return;
-            if (index >= _stringChapters.Count) return;
+            if (index >= stringChapters.Count) return;
             
-            leftAlphaPage.text = _stringChapters[index].text;
-            leftDisplayedPage.text = _stringChapters[index].text;
-            
-            rightAlphaPage.text = _stringChapters[index].text;
-            rightDisplayedPage.text = _stringChapters[index].text;
+            leftDisplayedPage.text = stringChapters[index].text;
+            rightDisplayedPage.text = stringChapters[index].text;
         
             // Need it because in the first frame it's null 
             ForceUpdate();
             
-            if (index >= _currentChapter || byContent)
+            if (index >= currentChapter || byContent)
             {
-                _currentChapter = index;
+                currentChapter = index;
                 SetStartPages();
             }
-            else if(index < _currentChapter)
+            else if(index < currentChapter)
             {
-                _currentChapter = index;
+                currentChapter = index;
                 SetPrevPages();
             }
             
             ShowAllNotesOnPage();
+            ShowPageNumber();
         }
         
         /**
@@ -125,10 +163,7 @@ namespace BookScripts
         {
             if (_currentPage >= 3)
             {
-                leftAlphaPage.pageToDisplay = _currentPage - 2;
                 leftDisplayedPage.pageToDisplay = _currentPage - 2;
-                
-                rightAlphaPage.pageToDisplay = _currentPage - 1;
                 rightDisplayedPage.pageToDisplay = _currentPage - 1;
                 
                 _currentPage -= 2;
@@ -137,6 +172,8 @@ namespace BookScripts
             {
                 GetPreviousChapter();
             }
+            
+            ShowPageNumber();
         }
     
         /**
@@ -147,10 +184,7 @@ namespace BookScripts
             int pageCount = (_pageCount % 2 == 0) ? _pageCount : _pageCount + 1;
             if (_currentPage <= pageCount - 3)
             {
-                leftAlphaPage.pageToDisplay = _currentPage + 2;
                 leftDisplayedPage.pageToDisplay = _currentPage + 2;
-                
-                rightAlphaPage.pageToDisplay = _currentPage + 3;
                 rightDisplayedPage.pageToDisplay = _currentPage + 3;
                 
                 _currentPage += 2;
@@ -159,6 +193,7 @@ namespace BookScripts
             {
                 GetNextChapter();
             }
+            ShowPageNumber();
         }    
         
         /**
@@ -168,22 +203,17 @@ namespace BookScripts
         private void SetStartPages()
         {
             _currentPage = 1;
-            leftAlphaPage.pageToDisplay = _currentPage;
             leftDisplayedPage.pageToDisplay = _currentPage;
             
-            _pageCount = leftAlphaPage.textInfo.pageCount;
+            _pageCount = leftDisplayedPage.textInfo.pageCount;
 
             if (_pageCount == 1)
             {
-                rightAlphaPage.text = "";
                 rightDisplayedPage.text = "";
-                
-                rightAlphaPage.pageToDisplay = 2;
                 rightDisplayedPage.pageToDisplay = 2;
             }
             else
             {
-                rightAlphaPage.pageToDisplay = _currentPage + 1;
                 rightDisplayedPage.pageToDisplay = _currentPage + 1;
             }
         }
@@ -194,19 +224,15 @@ namespace BookScripts
         private void SetPrevPages()
         {
             _currentPage = 1;
-            leftAlphaPage.pageToDisplay = _currentPage;
             leftDisplayedPage.pageToDisplay = _currentPage;
             
-            _pageCount = leftAlphaPage.textInfo.pageCount;
+            _pageCount = leftDisplayedPage.textInfo.pageCount;
             
             _pageCount = (_pageCount % 2 == 0) ? _pageCount : _pageCount + 1;
 
             _currentPage = _pageCount - 1;
-
-            leftAlphaPage.pageToDisplay = _currentPage;
-            leftDisplayedPage.pageToDisplay = _currentPage;
             
-            rightAlphaPage.pageToDisplay = _currentPage + 1;
+            leftDisplayedPage.pageToDisplay = _currentPage;
             rightDisplayedPage.pageToDisplay = _currentPage + 1;
         }
         
@@ -215,7 +241,7 @@ namespace BookScripts
          */
         private void GetNextChapter()
         {
-            SetChapter(_currentChapter + 1, false);
+            SetChapter(currentChapter + 1, false);
         }
 
         /**
@@ -223,26 +249,66 @@ namespace BookScripts
          */
         private void GetPreviousChapter()
         {
-            SetChapter(_currentChapter - 1, false);
+            SetChapter(currentChapter - 1, false);
         }
     
         
         //=================== NOTES ========================
+
+        private void ShowAllNotes()
+        {
+            _buttonNotes = new List<GameObject>();
+            
+            // create button for each note
+            for (var i = 0; i < _userData.chaptersCount; i++)
+            {
+                foreach (var note in _userData.notes[i].notes)
+                {
+                    var newButton = Instantiate(noteButtonPrefab, noteButtonParent.transform);
+                    newButton.GetComponentInChildren<TMP_Text>().text = note.highlightText;
+                    int chap = i;
+                    newButton.GetComponent<Button>().onClick.AddListener(() => ShowPageWithSelectedNote(note, chap));
+                    _buttonNotes.Add(newButton);
+                }
+            }
+        }
+        private void ShowPageWithSelectedNote(Note note, int chapter)
+        {
+            SetChapter(chapter, true);
+            Debug.Log("chap: " + chapter);
+            int charIndex = stringChapters[currentChapter].text.IndexOf(note.highlightText, StringComparison.Ordinal);
+            Debug.Log("char: "+ charIndex);
+            int pageIndex = leftDisplayedPage.textInfo.characterInfo[charIndex].pageNumber;
+
+            if (pageIndex % 2 != 0)
+            {
+                _currentPage = pageIndex;
+                leftDisplayedPage.pageToDisplay = _currentPage;
+                rightDisplayedPage.pageToDisplay = _currentPage + 1;
+            }
+            else
+            {
+                _currentPage = pageIndex - 1;
+                leftDisplayedPage.pageToDisplay = _currentPage;
+                rightDisplayedPage.pageToDisplay = _currentPage + 1;
+            }
+        }
+
         /**
          * Show all notes on the open page
          */
         public void ShowAllNotesOnPage()
         {
             // if chapter doesn't have notes
-            if (_userData.notes[_currentChapter].notes.Count == 0) return;
+            if (_userData.notes[currentChapter].notes.Count == 0) return;
 
             string left = leftDisplayedPage.text;
             string right = rightDisplayedPage.text;
             
-            foreach (var note in _userData.notes[_currentChapter].notes)
+            foreach (var note in _userData.notes[currentChapter].notes)
             {
-                left = left.Replace(note.highlightText, tagStart+note.highlightText+tagEnd);
-                right = right.Replace(note.highlightText, tagStart+note.highlightText+tagEnd);
+                left = left.Replace(note.highlightText, _tagStart+note.highlightText+_tagEnd);
+                right = right.Replace(note.highlightText, _tagStart+note.highlightText+_tagEnd);
             }
 
             leftDisplayedPage.text = left;
@@ -265,8 +331,8 @@ namespace BookScripts
 
             string oldText = leftDisplayedPage.text.Substring(start, end - start + 1);
             
-            leftDisplayedPage.text = leftDisplayedPage.text.Replace(oldText, tagStart + oldText + tagEnd);
-            rightDisplayedPage.text = rightDisplayedPage.text.Replace(oldText, tagStart + oldText + tagEnd);
+            leftDisplayedPage.text = leftDisplayedPage.text.Replace(oldText, _tagStart + oldText + _tagEnd);
+            rightDisplayedPage.text = rightDisplayedPage.text.Replace(oldText, _tagStart + oldText + _tagEnd);
 
             words.Clear();
             
@@ -274,27 +340,44 @@ namespace BookScripts
 
             // Save new note and change its color
             Note note = new Note(oldText, inputNote.text);
-            _userData.SaveNewNote(note, _currentChapter);
+            _userData.SaveNewNote(note, currentChapter);
 
             // deactivate "Save note" button
-            noteButton.SetActive(false);
+            noteButtonSave.SetActive(false);
+            //
+            noteButtonRemove.SetActive(false);
+            
             // deactivate keyboard
             keyboard.SetActive(false);
             // deactivate input field
             inputNote.text = "";
             noteText.SetActive(false);
         }
-        
+
+        public void RemoveNoteOnPage()
+        {
+            words.Clear();
+            // deactivate "Save note" button
+            noteButtonSave.SetActive(false);
+            // deactivate "remove note" button
+            noteButtonRemove.SetActive(false);
+            
+            // deactivate keyboard
+            keyboard.SetActive(false);
+            // deactivate input field
+            var inputNote = noteText.GetComponent<TMP_InputField>();
+            inputNote.text = "";
+            noteText.SetActive(false);
+            
+            ForceUpdate();
+        }
         
         /**
          * Update pages 
          */
         private void ForceUpdate()
         {
-            leftAlphaPage.ForceMeshUpdate();
             leftDisplayedPage.ForceMeshUpdate();
-            
-            rightAlphaPage.ForceMeshUpdate();
             rightDisplayedPage.ForceMeshUpdate();
         }
         
@@ -304,9 +387,9 @@ namespace BookScripts
         {
             List<string> tableOfContent = new List<string>();
         
-            for (int i = 0; i < _stringChapters.Count; i++)
+            for (int i = 0; i < stringChapters.Count; i++)
             {
-                tableOfContent.Add(_stringChapters[i].title);
+                tableOfContent.Add(stringChapters[i].title);
             }
         
             return tableOfContent;
@@ -322,9 +405,11 @@ namespace BookScripts
            _userData = JsonUtility.FromJson<UserData>(json);
             Debug.Log(_userData.ToString());
         }
-
+        
         public void SaveUserData()
         {
+            _userData.fontSize = settings.currentFontSize;
+            
             string json = JsonUtility.ToJson(_userData);
             
             using StreamWriter writer = new StreamWriter(_jsonFilePath);
@@ -334,5 +419,12 @@ namespace BookScripts
             sc.ChangeScene();
         }
 
+        public void SetFontSizeFromJson()
+        {
+            leftDisplayedPage.fontSize = settings.sizes[_userData.fontSize];
+            rightDisplayedPage.fontSize = settings.sizes[_userData.fontSize];
+            settings.currentFontSize = _userData.fontSize;
+            settings.SetButtonsVisibility();
+        }
     }
 }
