@@ -23,6 +23,7 @@ namespace BookScripts
         // Notes
         [SerializeField] private GameObject noteButtonSave;
         [SerializeField] private GameObject noteButtonRemove;
+        [SerializeField] private GameObject noteButtonDelete;               // delete existing selected note
         [SerializeField] private GameObject noteText;
         [SerializeField] private GameObject keyboard;
         
@@ -31,6 +32,7 @@ namespace BookScripts
         private List<GameObject> _buttonNotes;
 
         public List<(int, int)> words;
+        public string selectedNote;
 
         private string _tagStart;
         private string _tagEnd;
@@ -62,6 +64,7 @@ namespace BookScripts
             
             // Notes
             words = new List<(int, int)>();
+            selectedNote = "";
             _tagStart = "<color=red>";
             _tagEnd = "</color>";
 
@@ -72,7 +75,6 @@ namespace BookScripts
             {
                 Debug.Log("Load data from JSON");
                 LoadUserData();
-                //SetFontSizeFromJson();
             }
             else
             {
@@ -88,7 +90,7 @@ namespace BookScripts
             keyboard.SetActive(false);
             noteText.SetActive(false);
             
-            ShowAllNotes();
+            AddAllNotesToNotePage();
         }
         
         
@@ -234,6 +236,7 @@ namespace BookScripts
             
             leftDisplayedPage.pageToDisplay = _currentPage;
             rightDisplayedPage.pageToDisplay = _currentPage + 1;
+            ForceUpdate();
         }
         
         /**
@@ -255,7 +258,38 @@ namespace BookScripts
         
         //=================== NOTES ========================
 
-        private void ShowAllNotes()
+        public void DeleteSelectedNote()
+        {
+            if (selectedNote == "") return;
+
+            string clearNote = selectedNote.Replace(_tagStart, "").Replace(_tagEnd, "");
+
+            leftDisplayedPage.text = leftDisplayedPage.text.Replace(selectedNote, clearNote);
+            rightDisplayedPage.text = rightDisplayedPage.text.Replace(selectedNote, clearNote);
+            
+            _userData.DeleteExistingNote(clearNote, currentChapter);
+            selectedNote = "";
+            noteButtonDelete.SetActive(false);
+            DeleteNoteFormNotePage(clearNote);
+        }
+
+        public void DeleteNoteFormNotePage(string t)
+        {
+            foreach (var b in _buttonNotes)
+            {
+                if (b.GetComponentInChildren<TMP_Text>().text == t)
+                {
+                    Destroy(b);
+                    _buttonNotes.Remove(b);
+                    break;
+                }
+            }
+        }
+        
+        /**
+         * Add all existing notes as buttons to one page
+         */
+        private void AddAllNotesToNotePage()
         {
             _buttonNotes = new List<GameObject>();
             
@@ -272,13 +306,27 @@ namespace BookScripts
                 }
             }
         }
+        
+        /**
+         * Adds new saved note to page with all existing notes
+         */
+        private void AddNewNoteToNotePage(Note note)
+        {
+            var newButton = Instantiate(noteButtonPrefab, noteButtonParent.transform);
+            newButton.GetComponentInChildren<TMP_Text>().text = note.highlightText;
+            int chap = currentChapter;
+            newButton.GetComponent<Button>().onClick.AddListener(() => ShowPageWithSelectedNote(note, chap));
+            _buttonNotes.Add(newButton);
+        }
+        
+        /**
+         * Allows to jump to a selected note in the book
+         */
         private void ShowPageWithSelectedNote(Note note, int chapter)
         {
             SetChapter(chapter, true);
-            Debug.Log("chap: " + chapter);
             int charIndex = stringChapters[currentChapter].text.IndexOf(note.highlightText, StringComparison.Ordinal);
-            Debug.Log("char: "+ charIndex);
-            int pageIndex = leftDisplayedPage.textInfo.characterInfo[charIndex].pageNumber;
+            int pageIndex = leftDisplayedPage.textInfo.characterInfo[charIndex].pageNumber + 1;
 
             if (pageIndex % 2 != 0)
             {
@@ -292,6 +340,7 @@ namespace BookScripts
                 leftDisplayedPage.pageToDisplay = _currentPage;
                 rightDisplayedPage.pageToDisplay = _currentPage + 1;
             }
+            ShowPageNumber();
         }
 
         /**
@@ -341,10 +390,11 @@ namespace BookScripts
             // Save new note and change its color
             Note note = new Note(oldText, inputNote.text);
             _userData.SaveNewNote(note, currentChapter);
+            AddNewNoteToNotePage(note);
 
             // deactivate "Save note" button
             noteButtonSave.SetActive(false);
-            //
+            // deactivate "Cancel note" button
             noteButtonRemove.SetActive(false);
             
             // deactivate keyboard
@@ -353,7 +403,10 @@ namespace BookScripts
             inputNote.text = "";
             noteText.SetActive(false);
         }
-
+        
+        /**
+         * Deletes the started note selection
+         */
         public void RemoveNoteOnPage()
         {
             words.Clear();

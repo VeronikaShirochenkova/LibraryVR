@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Text.RegularExpressions;
 using TMPro;
 using Unity.VisualScripting;
 using UnityEngine;
@@ -20,7 +21,8 @@ namespace BookScripts
     
         // Notes
         [SerializeField] private GameObject noteButtonSave;
-        [SerializeField] private GameObject noteButtonRemove;
+        [SerializeField] private GameObject noteButtonRemove;               // cancel orange word selection
+        [SerializeField] private GameObject noteButtonDelete;               // delete existing note
         [SerializeField] private GameObject noteText;
         [SerializeField] private GameObject keyboard;
 
@@ -35,14 +37,16 @@ namespace BookScripts
     
         // highlighting colors
         private Color _color;
-        private Color _alfaColor;
+
+
+        private Regex tagsRegex;
+        private MatchCollection tagsMatches;
         
         private void Start()
         {
             _head = -1;
             _tail = -1;
             _color = new Color32(255, 128, 0, 255);
-            _alfaColor = new Color32(255, 128, 0, 0);
 
             // cause in 1st frame it's null
             displayedPage.ForceMeshUpdate();
@@ -51,13 +55,14 @@ namespace BookScripts
         private void Update()
         {
             float value = actionReference.action.ReadValue<float>();
-        
+
             // if trigger button almost pressed -> start highlighted text
             if (value >= 0.99f && marker.activeSelf) 
             {
                 HighlightText();
             }
         }
+        
 
         /**
          * If char was highlighted, paint whole word
@@ -66,6 +71,10 @@ namespace BookScripts
         {
             RaycastResult hitInfo;
             bool result = rayUI.TryGetCurrentUIRaycastResult(out hitInfo);
+            
+            tagsRegex = new Regex(@"<color=red>(.*?)<\/color>");
+            tagsMatches = tagsRegex.Matches(displayedPage.text);
+            
         
             // if ray hit UI element
             if (result)
@@ -77,6 +86,7 @@ namespace BookScripts
                 int i = firstChar;
                 while(i <= lastChar)
                 {
+                    
                     TMP_CharacterInfo cInfo = displayedPage.textInfo.characterInfo[i];
 
                     // get word position of char
@@ -91,12 +101,34 @@ namespace BookScripts
                         worldTopLeft, 
                         worldTopRight, 
                         worldBottomRight);
-                
+
                     if (res)
                     {
-                        // if char is a letter or punctuation mark and char isn't highlighted yet
-                        if (char.IsLetter(cInfo.character) && displayedPage.textInfo.meshInfo[cInfo.materialReferenceIndex].colors32[cInfo.vertexIndex] != _color)
+                        if (ClickOnNote(cInfo))
                         {
+                            Debug.Log(true + " " + textDisplay.selectedNote);
+                            break;
+                            //i++;
+                            //continue;
+                        }
+                        else
+                        {
+                            Debug.Log(false + " " + textDisplay.selectedNote);
+                        }
+                        
+                        if (noteButtonDelete.activeSelf)
+                        {
+                            textDisplay.selectedNote = "";
+                            noteButtonDelete.SetActive(false);
+                            break;
+                            //i++;
+                            //continue;
+                        }
+
+                        // if char is a letter or punctuation mark and char isn't highlighted yet
+                        if (char.IsLetter(cInfo.character) && displayedPage.textInfo.meshInfo[cInfo.materialReferenceIndex].colors32[cInfo.vertexIndex] != _color && !noteButtonDelete.activeSelf)
+                        {
+                            
                             // find all chars in this word
                             FindWordBorders(i, firstChar, lastChar);
                             if (_tail == -1 || _head == -1)
@@ -130,6 +162,33 @@ namespace BookScripts
                     i++;
                 }
             }
+            else
+            {
+                if (noteButtonDelete.activeSelf)
+                {
+                    textDisplay.selectedNote = "";
+                    noteButtonDelete.SetActive(false);
+                }
+            }
+        }
+
+        private bool ClickOnNote(TMP_CharacterInfo cInfo)
+        {
+            foreach (Match tagsMatch in tagsMatches)
+            {
+                // Проверяем, содержит ли найденная пара тегов символ с заданным индексом
+                int startIndex = tagsMatch.Index;
+                int endIndex = startIndex + tagsMatch.Length - 1;
+                
+                if (cInfo.index > startIndex && cInfo.index < endIndex)
+                {
+                    textDisplay.selectedNote = displayedPage.text.Substring(startIndex, endIndex - startIndex + 1);
+                    noteButtonDelete.SetActive(true);
+                    return true;
+                }
+            }
+
+            return false;
         }
 
         private void HighlightWord(TMP_Text page, Color color)

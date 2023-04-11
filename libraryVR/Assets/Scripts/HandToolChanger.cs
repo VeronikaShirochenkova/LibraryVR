@@ -34,7 +34,5 @@ public class HandToolChanger : MonoBehaviour
             bool isActive = !obj.activeSelf;
             obj.SetActive(isActive);
         }
-        //bool isActive = !gameObject.activeSelf;
-        //gameObject.SetActive(isActive);
     }
 }

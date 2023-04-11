@@ -41,6 +41,7 @@ namespace BookScripts
             {
                 _textDisplay.CountPagesNumber();
                 _textDisplay.SetFontSizeFromJson();
+                _textDisplay.SetChapter(0, true);
             }
             else
             {

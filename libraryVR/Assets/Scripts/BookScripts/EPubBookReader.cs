@@ -58,6 +58,7 @@ namespace BookScripts
                 {
                     _stringChapters.Add(ch);
                     ch.index = _stringChapters.Count - 1;
+                    ch.text += ".";
                 }
             }
         }

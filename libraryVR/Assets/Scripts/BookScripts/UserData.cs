@@ -19,6 +19,7 @@ namespace BookScripts
         public UserData(int chapsCount)
         {
             chaptersCount = chapsCount;
+            fontSize = 5;
             notes = new List<ChapterWrapper>();
             pages = new List<PageWrapper>();
             
@@ -35,6 +36,19 @@ namespace BookScripts
         public void SaveNewNote(Note note, int chapNumber)
         {
             notes[chapNumber].notes.Add(note);
+        }
+
+        public void DeleteExistingNote(string note, int chapNumber)
+        {
+            foreach (var n in notes[chapNumber].notes)
+            {
+                if (n.highlightText == note)
+                {
+                    notes[chapNumber].notes.Remove(n);
+                    break;
+                }
+            }
+            
         }
 
     }
