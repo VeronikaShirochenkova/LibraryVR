@@ -1108,7 +1108,7 @@
                     "initialStateCheck": false
                 },
                 {
-                    "name": "Color",
+                    "name": "Select",
                     "type": "Value",
                     "id": "cd1ce288-215f-4779-8c23-3da569bf0231",
                     "expectedControlType": "Axis",
@@ -1136,7 +1136,7 @@
                     "interactions": "",
                     "processors": "",
                     "groups": "",
-                    "action": "Color",
+                    "action": "Select",
                     "isComposite": false,
                     "isPartOfComposite": false
                 }

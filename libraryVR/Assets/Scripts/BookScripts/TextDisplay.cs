@@ -2,8 +2,9 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using TMPro;
+using Unity.VisualScripting;
+using UnityEditor;
 using UnityEngine;
-using UnityEngine.SceneManagement;
 using UnityEngine.Serialization;
 using UnityEngine.UI;
 
@@ -11,31 +12,34 @@ namespace BookScripts
 {
     public class TextDisplay : MonoBehaviour
     {
-        public SceneController sc;
+        public SceneController sceneController;
         
-        // Pages
+        [Header("Book pages")]
         [SerializeField] private TMP_Text leftDisplayedPage;
         [SerializeField] private TMP_Text rightDisplayedPage;
-        public TextSettings settings;
         [SerializeField] private TMP_Text leftPageNumber;
         [SerializeField] private TMP_Text rightPageNumber;
-    
-        // Notes
-        [SerializeField] private GameObject noteButtonSave;
-        [SerializeField] private GameObject noteButtonRemove;
-        [SerializeField] private GameObject noteButtonDelete;               // delete existing selected note
-        [SerializeField] private GameObject noteText;
-        [SerializeField] private GameObject keyboard;
         
+        [Header("Page Settings")]
+        public TextSettings settings;
+        
+        [Header("Note-taking tools")]
+        [SerializeField] private GameObject noteSaveButton;
+        [SerializeField] private GameObject noteCancelButton;
+        [SerializeField] private GameObject noteDeleteButton;               // delete existing selected note
+        [SerializeField] private GameObject noteText;
+        [SerializeField] private GameObject noteKeyboard;
+        
+        [Header("Note parts")]
         public GameObject noteButtonPrefab;
         public GameObject noteButtonParent;
         private List<GameObject> _buttonNotes;
 
-        public List<(int, int)> words;
-        public string selectedNote;
-
-        private string _tagStart;
-        private string _tagEnd;
+        [HideInInspector] public string selectedNote;           // the text of the selected existing note
+        public List<(int, int)> words;                          // start and end index of each word selected by the marker
+        
+        private string _tagStart;                               // tags for highlighting notes in text
+        private string _tagEnd;                                 //
     
         // JSON
         private string _jsonFilePath;
@@ -43,22 +47,27 @@ namespace BookScripts
     
         // Book
         private string _filePath;
+        [HideInInspector] public int currentChapter;
         public List<Chapter> stringChapters;
     
         private int _pageCount;
         private int _currentPage;
-        public int currentChapter;
+        
+        [Header("Book Search")]
+        [SerializeField] private TMP_InputField searchBox;
+        public GameObject searchButtonPrefab;
+        public GameObject searchButtonParent;
+        private List<GameObject> _buttonSearchResults;
+        
         
         void Start()
         {
-            
             _filePath = PlayerPrefs.GetString("selectedBook");
 
             // _filePath = Application.dataPath + "/Resources/Books/Fahrenheit451/Fahrenheit451_EN.epub";       // ok
             // _filePath = Application.dataPath + "/Resources/Books/BraveNewWorld/BraveNewWorld_EN.epub";       // ok
             //_filePath = Application.dataPath + "/Resources/Books/NineteenEightyFour/1984_EN.epub";             // ok
-
-
+            
             EPubBookReader reader = new EPubBookReader(_filePath);
             stringChapters = reader.GetAllChapters();
             
@@ -87,33 +96,115 @@ namespace BookScripts
             SetChapter(currentChapter, false);
             
             
-            keyboard.SetActive(false);
+            noteKeyboard.SetActive(false);
             noteText.SetActive(false);
             
             AddAllNotesToNotePage();
+            
+            // search
+            _buttonSearchResults = new List<GameObject>();
         }
         
         
+        //=================== SEARCH ========================
+
+        public void SearchWholeBook()
+        {
+            string text = searchBox.text;
+            List<List<string>> allSentences = new List<List<string>>();
+
+            for (int i = 0; i < _userData.chaptersCount; i++)
+            {
+                string[] sentences = stringChapters[i].text.Split(new char[] { '.', '?', '!' });
+                List<string> chapterSentences = new List<string>();
+
+                foreach (string sentence in sentences)
+                {
+                    if (sentence.Contains(text))
+                    {
+                        chapterSentences.Add(sentence);
+                    }
+                }
+                allSentences.Add(chapterSentences);
+            }
+            
+            ShowSearchResults(allSentences);
+        }
+
+        private void ShowSearchResults(List<List<string>> allSentences)
+        {
+            DestroySearchResults();
+            
+            for (int i = 0; i < _userData.chaptersCount; i++)
+            {
+                if (allSentences[i].Count == 0) continue;
+                foreach (var sentence in allSentences[i])
+                {
+                    var newButton = Instantiate(searchButtonPrefab, searchButtonParent.transform);
+                    newButton.GetComponentInChildren<TMP_Text>().text = sentence;
+                    int chap = i;
+                    newButton.GetComponent<Button>().onClick.AddListener(() => ShowPageWithSelectedSentence(sentence, chap));
+                    _buttonSearchResults.Add(newButton);
+                }
+            }
+        }
+
+        private void DestroySearchResults()
+        {
+            if (_buttonSearchResults.Count == 0) return;
+            
+            foreach (var res in _buttonSearchResults)
+            {
+                Destroy(res);
+            }
+            _buttonSearchResults.Clear();
+        }
+        
+        private void ShowPageWithSelectedSentence(string sentence, int chapter)
+        {
+            SetChapter(chapter, true);
+            int charIndex = stringChapters[currentChapter].text.IndexOf(sentence, StringComparison.Ordinal);
+            int pageIndex = leftDisplayedPage.textInfo.characterInfo[charIndex].pageNumber + 1;
+
+            if (pageIndex % 2 != 0)
+            {
+                _currentPage = pageIndex;
+                leftDisplayedPage.pageToDisplay = _currentPage;
+                rightDisplayedPage.pageToDisplay = _currentPage + 1;
+            }
+            else
+            {
+                _currentPage = pageIndex - 1;
+                leftDisplayedPage.pageToDisplay = _currentPage;
+                rightDisplayedPage.pageToDisplay = _currentPage + 1;
+            }
+            ShowPageNumber();
+        }
+        
         //=================== PAGES ========================
+        /**
+         * Called only the first time the book is opened.
+         * Counts how many pages each chapter takes with each font size
+         */
         public void CountPagesNumber()
         {
-            for(int ch = 0; ch < stringChapters.Count; ch++)
+            for(var chapter = 0; chapter < stringChapters.Count; chapter++)
             {
-                int fontSize = 0;
-                leftDisplayedPage.text = stringChapters[ch].text;
-                
-                for (int i = 0; i < settings.sizes.Count; i++)
+                leftDisplayedPage.text = stringChapters[chapter].text;
+
+                foreach (var fontSize in settings.sizes)
                 {
-                    leftDisplayedPage.fontSize = settings.sizes[fontSize];
+                    leftDisplayedPage.fontSize = fontSize;
                     leftDisplayedPage.ForceMeshUpdate();
-                    int pc = (leftDisplayedPage.textInfo.pageCount % 2 == 0) ? leftDisplayedPage.textInfo.pageCount : leftDisplayedPage.textInfo.pageCount + 1;
-                    _userData.pages[ch].pages.Add(pc);
-                    
-                    fontSize++;
+                    var pc = (leftDisplayedPage.textInfo.pageCount % 2 == 0) ? leftDisplayedPage.textInfo.pageCount : leftDisplayedPage.textInfo.pageCount + 1;
+                    _userData.pages[chapter].pages.Add(pc);
                 }
             }
         }
         
+        /**
+         * Displays the left and right page numbers
+         */
         public void ShowPageNumber()
         {
             int n = 0;
@@ -269,7 +360,7 @@ namespace BookScripts
             
             _userData.DeleteExistingNote(clearNote, currentChapter);
             selectedNote = "";
-            noteButtonDelete.SetActive(false);
+            noteDeleteButton.SetActive(false);
             DeleteNoteFormNotePage(clearNote);
         }
 
@@ -393,12 +484,12 @@ namespace BookScripts
             AddNewNoteToNotePage(note);
 
             // deactivate "Save note" button
-            noteButtonSave.SetActive(false);
+            noteSaveButton.SetActive(false);
             // deactivate "Cancel note" button
-            noteButtonRemove.SetActive(false);
+            noteCancelButton.SetActive(false);
             
             // deactivate keyboard
-            keyboard.SetActive(false);
+            noteKeyboard.SetActive(false);
             // deactivate input field
             inputNote.text = "";
             noteText.SetActive(false);
@@ -411,12 +502,12 @@ namespace BookScripts
         {
             words.Clear();
             // deactivate "Save note" button
-            noteButtonSave.SetActive(false);
+            noteSaveButton.SetActive(false);
             // deactivate "remove note" button
-            noteButtonRemove.SetActive(false);
+            noteCancelButton.SetActive(false);
             
             // deactivate keyboard
-            keyboard.SetActive(false);
+            noteKeyboard.SetActive(false);
             // deactivate input field
             var inputNote = noteText.GetComponent<TMP_InputField>();
             inputNote.text = "";
@@ -469,7 +560,7 @@ namespace BookScripts
             writer.Write(json);
 
 
-            sc.ChangeScene();
+            sceneController.ChangeScene();
         }
 
         public void SetFontSizeFromJson()

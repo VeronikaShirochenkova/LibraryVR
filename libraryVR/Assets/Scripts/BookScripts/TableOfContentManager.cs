@@ -8,13 +8,17 @@ namespace BookScripts
 {
     public class TableOfContentManager : MonoBehaviour
     {
+        [Header("Book")]
+        public TextDisplay book;
+        
+        [Header("Chapter parts")]
         public GameObject buttonPrefab;
         public GameObject buttonParent;
         
-        public TextDisplay book;
-        
+        [Header("Table of content Tools")]
         public GameObject previousButton;
         public GameObject nextButton;
+        
         
         private List<string> _tableOfContent;
         private List<GameObject> _buttons;

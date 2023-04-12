@@ -12,21 +12,26 @@ namespace BookScripts
 {
     public class TextHighlighter : MonoBehaviour
     {
-        [SerializeField] private XRRayInteractor rayUI;                     // used like marker
+        [Header("UI rays")]
+        [SerializeField] private XRRayInteractor markerRay;                     // used like marker
+        [SerializeField] private XRRayInteractor handRay;                     // used like marker
+        [SerializeField] private GameObject marker;                         // marker mesh
+        
+        [Header("XR Controller")]
         [SerializeField] private InputActionReference actionReference;      // trigger button action
+        
+        [Header("Book")]
+        public TextDisplay textDisplay;
         [SerializeField] private TMP_Text displayedPage;                    // ref to page which display text
         
         
-        [SerializeField] private GameObject marker;                         // marker mesh
-    
-        // Notes
-        [SerializeField] private GameObject noteButtonSave;
-        [SerializeField] private GameObject noteButtonRemove;               // cancel orange word selection
-        [SerializeField] private GameObject noteButtonDelete;               // delete existing note
+        [Header("Note-taking tools")]
+        [SerializeField] private GameObject noteSaveButton;
+        [SerializeField] private GameObject noteCancelButton;               // cancel orange word selection
+        [SerializeField] private GameObject noteDeleteButton;               // delete existing note
         [SerializeField] private GameObject noteText;
-        [SerializeField] private GameObject keyboard;
-
-        public TextDisplay textDisplay;
+        [SerializeField] private GameObject noteKeyboard;
+        
     
         // User data
         private UserData _userData;
@@ -37,16 +42,16 @@ namespace BookScripts
     
         // highlighting colors
         private Color _color;
-
-
-        private Regex tagsRegex;
-        private MatchCollection tagsMatches;
+        
+        private Regex _tagsRegex;
+        private MatchCollection _tagsMatches;
         
         private void Start()
         {
             _head = -1;
             _tail = -1;
             _color = new Color32(255, 128, 0, 255);
+            _tagsRegex = new Regex(@"<color=red>(.*?)<\/color>");
 
             // cause in 1st frame it's null
             displayedPage.ForceMeshUpdate();
@@ -57,10 +62,91 @@ namespace BookScripts
             float value = actionReference.action.ReadValue<float>();
 
             // if trigger button almost pressed -> start highlighted text
-            if (value >= 0.99f && marker.activeSelf) 
+            if (value >= 0.99f) 
             {
-                HighlightText();
+                if (marker.activeSelf)
+                {
+                    if (noteDeleteButton.activeSelf)
+                    {
+                        textDisplay.selectedNote = "";
+                        noteDeleteButton.SetActive(false);
+                    } 
+                    HighlightText();  
+                }
+                else
+                {
+                    InteractWithNote();
+                }
+                
             }
+            
+        }
+
+        /**
+         * Checks if there was an attempt to interact with an existing note;
+         * If so, displays the attached text;
+         * Also allows to delete this note;
+         */
+        private void InteractWithNote()
+        {
+            RaycastResult handHitInfo;
+            bool result = handRay.TryGetCurrentUIRaycastResult(out handHitInfo);
+            
+            _tagsMatches = _tagsRegex.Matches(displayedPage.text);
+            
+            // if ray hit UI element
+            if (result)
+            {
+                // get indices of first and last char on current page 
+                var firstChar = displayedPage.textInfo.pageInfo[displayedPage.pageToDisplay - 1].firstCharacterIndex;
+                var lastChar = displayedPage.textInfo.pageInfo[displayedPage.pageToDisplay - 1].lastCharacterIndex;
+
+                int i = firstChar;
+                while(i <= lastChar)
+                {
+                    
+                    TMP_CharacterInfo cInfo = displayedPage.textInfo.characterInfo[i];
+
+                    // get word position of char
+                    Vector3 worldBottomLeft = transform.TransformPoint(cInfo.bottomLeft);
+                    Vector3 worldBottomRight = transform.TransformPoint(cInfo.bottomRight);
+                    Vector3 worldTopLeft = transform.TransformPoint(cInfo.topLeft);
+                    Vector3 worldTopRight = transform.TransformPoint(cInfo.topRight);
+                    
+                    // check if ray hit this char
+                    bool res = PointInsideRectangle(handHitInfo.worldPosition, 
+                        worldBottomLeft, 
+                        worldTopLeft, 
+                        worldTopRight, 
+                        worldBottomRight);
+
+                    if (res)
+                    {
+                        if (ClickOnNote(cInfo))
+                        {
+                            break;
+                        }
+
+                        if (noteDeleteButton.activeSelf)
+                        {
+                            textDisplay.selectedNote = "";
+                            noteDeleteButton.SetActive(false);
+                        }
+                        break;
+                    }
+
+                    i++;
+                }
+            }
+            else
+            {
+                if (noteDeleteButton.activeSelf)
+                {
+                    textDisplay.selectedNote = "";
+                    noteDeleteButton.SetActive(false);
+                }
+            }
+            
         }
         
 
@@ -70,12 +156,10 @@ namespace BookScripts
         private void HighlightText()
         {
             RaycastResult hitInfo;
-            bool result = rayUI.TryGetCurrentUIRaycastResult(out hitInfo);
+            bool result = markerRay.TryGetCurrentUIRaycastResult(out hitInfo);
             
-            tagsRegex = new Regex(@"<color=red>(.*?)<\/color>");
-            tagsMatches = tagsRegex.Matches(displayedPage.text);
+            _tagsMatches = _tagsRegex.Matches(displayedPage.text);
             
-        
             // if ray hit UI element
             if (result)
             {
@@ -104,29 +188,14 @@ namespace BookScripts
 
                     if (res)
                     {
+
                         if (ClickOnNote(cInfo))
                         {
-                            Debug.Log(true + " " + textDisplay.selectedNote);
                             break;
-                            //i++;
-                            //continue;
-                        }
-                        else
-                        {
-                            Debug.Log(false + " " + textDisplay.selectedNote);
-                        }
-                        
-                        if (noteButtonDelete.activeSelf)
-                        {
-                            textDisplay.selectedNote = "";
-                            noteButtonDelete.SetActive(false);
-                            break;
-                            //i++;
-                            //continue;
                         }
 
                         // if char is a letter or punctuation mark and char isn't highlighted yet
-                        if (char.IsLetter(cInfo.character) && displayedPage.textInfo.meshInfo[cInfo.materialReferenceIndex].colors32[cInfo.vertexIndex] != _color && !noteButtonDelete.activeSelf)
+                        if (char.IsLetter(cInfo.character) && displayedPage.textInfo.meshInfo[cInfo.materialReferenceIndex].colors32[cInfo.vertexIndex] != _color)
                         {
                             
                             // find all chars in this word
@@ -141,15 +210,15 @@ namespace BookScripts
                     
                             // highlight word on alfa page
                             HighlightWord(displayedPage, _color);
-                            // highlight word on displayed page
-                            ShowOnDisplayedPage();
+                            // add word in list 
+                            AddWordInList();
                             
                             // Show buttons which save/remove new note
-                            if (!noteButtonSave.activeSelf) {noteButtonSave.SetActive(true);}
-                            if (!noteButtonRemove.activeSelf) {noteButtonRemove.SetActive(true);}
+                            if (!noteSaveButton.activeSelf) {noteSaveButton.SetActive(true);}
+                            if (!noteCancelButton.activeSelf) {noteCancelButton.SetActive(true);}
                             
                             // Show keyboard for typing text for note
-                            if (!keyboard.activeSelf) {keyboard.SetActive(true);}
+                            if (!noteKeyboard.activeSelf) {noteKeyboard.SetActive(true);}
                             // Show input field for show text for note
                             if (!noteText.activeSelf) { noteText.SetActive(true); }
                         
@@ -162,28 +231,26 @@ namespace BookScripts
                     i++;
                 }
             }
-            else
-            {
-                if (noteButtonDelete.activeSelf)
-                {
-                    textDisplay.selectedNote = "";
-                    noteButtonDelete.SetActive(false);
-                }
-            }
         }
 
+        /**
+         * Checks if the selected character is in the selection
+         */
         private bool ClickOnNote(TMP_CharacterInfo cInfo)
         {
-            foreach (Match tagsMatch in tagsMatches)
+            foreach (Match tagsMatch in _tagsMatches)
             {
-                // Проверяем, содержит ли найденная пара тегов символ с заданным индексом
                 int startIndex = tagsMatch.Index;
                 int endIndex = startIndex + tagsMatch.Length - 1;
                 
                 if (cInfo.index > startIndex && cInfo.index < endIndex)
                 {
+                    if (marker.activeSelf)
+                    {
+                        return true;
+                    }
                     textDisplay.selectedNote = displayedPage.text.Substring(startIndex, endIndex - startIndex + 1);
-                    noteButtonDelete.SetActive(true);
+                    noteDeleteButton.SetActive(true);
                     return true;
                 }
             }
@@ -204,8 +271,8 @@ namespace BookScripts
             }
             page.UpdateVertexData(TMP_VertexDataUpdateFlags.Colors32);
         }
-
-        private void ShowOnDisplayedPage()
+        
+        private void AddWordInList()
         {
             textDisplay.words.Add((displayedPage.textInfo.characterInfo[_head].index, displayedPage.textInfo.characterInfo[_tail].index));
         }
@@ -215,7 +282,6 @@ namespace BookScripts
          */
         private void FindWordBorders(int charIdx, int start, int end)
         {
-            
 
             var ch = displayedPage.textInfo.characterInfo[charIdx];
             _head = charIdx;

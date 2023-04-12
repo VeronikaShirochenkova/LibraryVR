@@ -8,17 +8,19 @@ namespace BookScripts
 {
     public class TextSettings : MonoBehaviour
     {
+        [Header("Book")]
         [SerializeField] private TMP_Text leftPage;
         [SerializeField] private TMP_Text rightPage;
 
-        [SerializeField] private GameObject maxButton;
+        [Header("Settings Tools")]
         [SerializeField] private GameObject minButton;
+        [SerializeField] private GameObject maxButton;
         
-
-        public int currentFontSize;
-        public List<float> sizes;
+        [HideInInspector] public int currentFontSize;
+        [HideInInspector] public List<float> sizes;
         
         private TextDisplay _textDisplay;
+        
         private void Start()
         {
             sizes = new List<float>()

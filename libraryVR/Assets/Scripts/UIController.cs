@@ -9,6 +9,10 @@ public class UIController : MonoBehaviour
 {
     [SerializeField] private XRRayInteractor _xrRayInteractor;
     [SerializeField] private ActionBasedController _actionBasedController;
+    
+    [SerializeField] private XRRayInteractor _xrRayInteractor2;
+    [SerializeField] private ActionBasedController _actionBasedController2;
+    
     [SerializeField] private XRDirectInteractor _xrDirectInteractor;
     [SerializeField] private InputActionReference _UIActionRef;
     
@@ -25,7 +29,10 @@ public class UIController : MonoBehaviour
         _xrDirectInteractor.enabled = false;
 
         _xrRayInteractor.enabled = true;
+        _xrRayInteractor2.enabled = true;
+        
         _actionBasedController.enableInputActions = true;
+        _actionBasedController2.enableInputActions = true;
     }
 
     private void _UIModeCancel(InputAction.CallbackContext obj) => Invoke("DisableUI", 0.05f);
@@ -36,6 +43,7 @@ public class UIController : MonoBehaviour
 
         //_xrRayInteractor.enabled = false;
         _actionBasedController.enableInputActions = false;
+        _actionBasedController2.enableInputActions = false;
     }
 
     private void OnDisable()
