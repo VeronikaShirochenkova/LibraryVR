@@ -29,6 +29,7 @@ namespace BookScripts
         [SerializeField] private GameObject noteSaveButton;
         [SerializeField] private GameObject noteCancelButton;               // cancel orange word selection
         [SerializeField] private GameObject noteDeleteButton;               // delete existing note
+        [SerializeField] private GameObject noteRetellingButton;
         [SerializeField] private GameObject noteText;
         [SerializeField] private GameObject noteKeyboard;
         
@@ -216,6 +217,8 @@ namespace BookScripts
                             // Show buttons which save/remove new note
                             if (!noteSaveButton.activeSelf) {noteSaveButton.SetActive(true);}
                             if (!noteCancelButton.activeSelf) {noteCancelButton.SetActive(true);}
+                            //Show button which start retelling this note
+                            if (!noteRetellingButton.activeSelf) {noteRetellingButton.SetActive(true);}
                             
                             // Show keyboard for typing text for note
                             if (!noteKeyboard.activeSelf) {noteKeyboard.SetActive(true);}

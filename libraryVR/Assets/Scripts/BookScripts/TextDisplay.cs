@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using chatGPT;
 using TMPro;
 using Unity.VisualScripting;
 using UnityEditor;
@@ -27,6 +28,7 @@ namespace BookScripts
         [SerializeField] private GameObject noteSaveButton;
         [SerializeField] private GameObject noteCancelButton;
         [SerializeField] private GameObject noteDeleteButton;               // delete existing selected note
+        [SerializeField] private GameObject noteRetellingButton;
         [SerializeField] private GameObject noteText;
         [SerializeField] private GameObject noteKeyboard;
         
@@ -36,6 +38,8 @@ namespace BookScripts
         private List<GameObject> _buttonNotes;
 
         [HideInInspector] public string selectedNote;           // the text of the selected existing note
+        public OpenAIController aiController;
+        
         public List<(int, int)> words;                          // start and end index of each word selected by the marker
         
         private string _tagStart;                               // tags for highlighting notes in text
@@ -487,12 +491,50 @@ namespace BookScripts
             noteSaveButton.SetActive(false);
             // deactivate "Cancel note" button
             noteCancelButton.SetActive(false);
+            // deactivate "retelling" button
+            noteRetellingButton.SetActive(false);
             
             // deactivate keyboard
             noteKeyboard.SetActive(false);
             // deactivate input field
             inputNote.text = "";
             noteText.SetActive(false);
+        }
+
+        public void GetNoteForRetelling()
+        {
+            var start = words[0].Item1;
+            var end = words[0].Item2;
+            
+            foreach (var word in words)
+            {
+                start = (word.Item1 < start) ? word.Item1 : start;
+                end = (word.Item2 > end) ? word.Item2 : end;
+            }
+            
+            string noteForRetelling = leftDisplayedPage.text.Substring(start, end - start + 1);
+            aiController.GetResponse(noteForRetelling);
+            
+            
+            words.Clear();
+
+            // deactivate "Save note" button
+            noteSaveButton.SetActive(false);
+            // deactivate "Cancel note" button
+            noteCancelButton.SetActive(false);
+            // deactivate "retelling" button
+            noteRetellingButton.SetActive(false);
+            
+            // deactivate keyboard
+            noteKeyboard.SetActive(false);
+            // deactivate input field
+            var inputNote = noteText.GetComponent<TMP_InputField>();
+            inputNote.text = "";
+            noteText.SetActive(false);
+            
+            
+            leftDisplayedPage.ForceMeshUpdate();
+            rightDisplayedPage.ForceMeshUpdate();
         }
         
         /**
@@ -505,6 +547,8 @@ namespace BookScripts
             noteSaveButton.SetActive(false);
             // deactivate "remove note" button
             noteCancelButton.SetActive(false);
+            // deactivate "retelling" button
+            noteRetellingButton.SetActive(false);
             
             // deactivate keyboard
             noteKeyboard.SetActive(false);
