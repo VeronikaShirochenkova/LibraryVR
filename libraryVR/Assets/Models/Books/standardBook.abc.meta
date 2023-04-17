@@ -1,0 +1,68 @@
+fileFormatVersion: 2
+guid: 67bb928bf261f2f43889c0533c46e89a
+ScriptedImporter:
+  internalIDToNameTable: []
+  externalObjects:
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: 'book_cover/binding/binding_mesh:000:'
+    second: {fileID: 2100000, guid: 3b5a0f8f7321e1a4b89e55e1eb66195f, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: 'book_cover/cover_mesh:000:'
+    second: {fileID: 2100000, guid: 3d707cfb032cfa144a7295c59ed511bd, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: 'book_cover/left_part/left_part_mesh:000:'
+    second: {fileID: 2100000, guid: cda94cfe66ab5e64c8d6045dd315c173, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: 'book_cover/rigth_part/right_part_mesh:000:'
+    second: {fileID: 2100000, guid: cda94cfe66ab5e64c8d6045dd315c173, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: 'book_cover/sheet_back/sheet_back_mesh:000:'
+    second: {fileID: 2100000, guid: cda94cfe66ab5e64c8d6045dd315c173, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: 'book_cover/sheet_forward/sheet_forward_mesh:000:'
+    second: {fileID: 2100000, guid: cda94cfe66ab5e64c8d6045dd315c173, type: 2}
+  serializedVersion: 2
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+  script: {fileID: 11500000, guid: f53f5fc499d31e44b9deee84d28a9ee8, type: 3}
+  rootGameObjectId: 
+  rootGameObjectName: 
+  importerVersion: 1
+  streamSettings:
+    normals: 1
+    tangents: 1
+    cameraAspectRatio: 2
+    importVisibility: 1
+    scaleFactor: 1
+    swapHandedness: 1
+    flipFaces: 0
+    interpolateSamples: 1
+    importPointPolygon: 1
+    importLinePolygon: 1
+    importTrianglePolygon: 1
+    importXform: 1
+    importCameras: 1
+    importMeshes: 1
+    importPoints: 0
+    importCurves: 1
+    createCurveRenderers: 0
+  abcStartTime: 0.041666666666666664
+  abcEndTime: 1.25
+  startTime: 0.041666666666666664
+  endTime: 1.25
+  importWarning: 
+  firstImport: 0
+  isHDF5: 0
