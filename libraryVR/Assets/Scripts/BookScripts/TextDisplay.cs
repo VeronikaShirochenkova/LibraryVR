@@ -29,10 +29,14 @@ namespace BookScripts
         [Header("Note-taking tools")]
         [SerializeField] private GameObject noteSaveButton;
         [SerializeField] private GameObject noteCancelButton;
+        [SerializeField] private GameObject noteWriteButton;
+        
+        [SerializeField] private GameObject notePaper;
+        [SerializeField] private GameObject noteKeyboard;
+        
         [SerializeField] private GameObject noteDeleteButton;               // delete existing selected note
         [SerializeField] private GameObject noteRetellingButton;
-        [SerializeField] private GameObject noteText;
-        [SerializeField] private GameObject noteKeyboard;
+        
         
         [Header("Note parts")]
         public GameObject noteButtonPrefab;
@@ -110,7 +114,7 @@ namespace BookScripts
             
             
             noteKeyboard.SetActive(false);
-            noteText.SetActive(false);
+            notePaper.SetActive(false);
             
             AddAllNotesToNotePage();
             
@@ -534,7 +538,7 @@ namespace BookScripts
 
             words.Clear();
             
-            var inputNote = noteText.GetComponent<TMP_InputField>();
+            var inputNote = notePaper.GetComponentInChildren<TMP_InputField>();
 
             // Save new note and change its color
             Note note = new Note(oldText, inputNote.text);
@@ -542,17 +546,23 @@ namespace BookScripts
             AddNewNoteToNotePage(note);
 
             // deactivate "Save note" button
-            noteSaveButton.SetActive(false);
+            noteSaveButton.GetComponent<MoveObject>().MoveObjectOnClick();
+
             // deactivate "Cancel note" button
-            noteCancelButton.SetActive(false);
+            noteCancelButton.GetComponent<MoveObject>().MoveObjectOnClick();
+
+            // deactivate "Write mark" button
+            noteWriteButton.GetComponent<MoveObject>().MoveObjectOnClick();
+
             // deactivate "retelling" button
-            noteRetellingButton.SetActive(false);
+            noteRetellingButton.GetComponent<MoveObject>().MoveObjectOnClick();
+
             
             // deactivate keyboard
             noteKeyboard.SetActive(false);
             // deactivate input field
             inputNote.text = "";
-            noteText.SetActive(false);
+            notePaper.SetActive(false);
         }
 
         public void GetNoteForRetelling()
@@ -573,18 +583,23 @@ namespace BookScripts
             words.Clear();
 
             // deactivate "Save note" button
-            noteSaveButton.SetActive(false);
+            noteSaveButton.GetComponent<MoveObject>().MoveObjectOnClick();
+
             // deactivate "Cancel note" button
-            noteCancelButton.SetActive(false);
+            noteCancelButton.GetComponent<MoveObject>().MoveObjectOnClick();
+
+            // deactivate "Write mark" button
+            noteWriteButton.GetComponent<MoveObject>().MoveObjectOnClick();
+
             // deactivate "retelling" button
-            noteRetellingButton.SetActive(false);
+            noteRetellingButton.GetComponent<MoveObject>().MoveObjectOnClick();
             
             // deactivate keyboard
             noteKeyboard.SetActive(false);
             // deactivate input field
-            var inputNote = noteText.GetComponent<TMP_InputField>();
+            var inputNote = notePaper.GetComponentInChildren<TMP_InputField>();
             inputNote.text = "";
-            noteText.SetActive(false);
+            notePaper.SetActive(false);
             
             
             leftDisplayedPage.ForceMeshUpdate();
@@ -598,20 +613,40 @@ namespace BookScripts
         {
             words.Clear();
             // deactivate "Save note" button
-            noteSaveButton.SetActive(false);
-            // deactivate "remove note" button
-            noteCancelButton.SetActive(false);
+            noteSaveButton.GetComponent<MoveObject>().MoveObjectOnClick();
+
+            // deactivate "Cancel note" button
+            noteCancelButton.GetComponent<MoveObject>().MoveObjectOnClick();
+
+            // deactivate "Write mark" button
+            noteWriteButton.GetComponent<MoveObject>().MoveObjectOnClick();
+
             // deactivate "retelling" button
-            noteRetellingButton.SetActive(false);
+            noteRetellingButton.GetComponent<MoveObject>().MoveObjectOnClick();
             
             // deactivate keyboard
             noteKeyboard.SetActive(false);
             // deactivate input field
-            var inputNote = noteText.GetComponent<TMP_InputField>();
+            var inputNote = notePaper.GetComponentInChildren<TMP_InputField>();
             inputNote.text = "";
-            noteText.SetActive(false);
+            notePaper.SetActive(false);
             
             ForceUpdate();
+        }
+
+        public void KeyboardAndNotePaperVisibility()
+        {
+            noteKeyboard.SetActive(!noteKeyboard.activeSelf);
+
+            if (notePaper.activeSelf)
+            {
+                notePaper.GetComponentInChildren<TMP_InputField>().text = "";
+                notePaper.SetActive(false);
+            }
+            else
+            {
+                notePaper.SetActive(true);
+            }
         }
         
         /**

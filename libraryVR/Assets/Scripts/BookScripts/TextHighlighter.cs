@@ -27,11 +27,17 @@ namespace BookScripts
         
         [Header("Note-taking tools")]
         [SerializeField] private GameObject noteSaveButton;
+        private MoveObject _saveButton;
+        
         [SerializeField] private GameObject noteCancelButton;               // cancel orange word selection
+        private MoveObject _cancelButton;
+        [SerializeField] private GameObject noteWriteButton;
+        private MoveObject _writeButton;
         [SerializeField] private GameObject noteDeleteButton;               // delete existing note
+        private MoveObject _deleteButton;
         [SerializeField] private GameObject noteRetellingButton;
-        [SerializeField] private GameObject noteText;
-        [SerializeField] private GameObject noteKeyboard;
+        private MoveObject _retellingButton;
+        
         
     
         // User data
@@ -56,6 +62,13 @@ namespace BookScripts
 
             // cause in 1st frame it's null
             displayedPage.ForceMeshUpdate();
+
+
+            _saveButton = noteSaveButton.GetComponent<MoveObject>();
+            _cancelButton = noteCancelButton.GetComponent<MoveObject>();
+            _writeButton = noteWriteButton.GetComponent<MoveObject>();
+            _deleteButton = noteDeleteButton.GetComponent<MoveObject>();
+            _retellingButton = noteRetellingButton.GetComponent<MoveObject>();
         }
     
         private void Update()
@@ -70,7 +83,8 @@ namespace BookScripts
                     if (noteDeleteButton.activeSelf)
                     {
                         textDisplay.selectedNote = "";
-                        noteDeleteButton.SetActive(false);
+                        //noteDeleteButton.SetActive(false);
+                        _deleteButton.MoveObjectOnClick();
                     } 
                     HighlightText();  
                 }
@@ -131,7 +145,8 @@ namespace BookScripts
                         if (noteDeleteButton.activeSelf)
                         {
                             textDisplay.selectedNote = "";
-                            noteDeleteButton.SetActive(false);
+                            //noteDeleteButton.SetActive(false);
+                            _deleteButton.MoveObjectOnClick();
                         }
                         break;
                     }
@@ -144,7 +159,8 @@ namespace BookScripts
                 if (noteDeleteButton.activeSelf)
                 {
                     textDisplay.selectedNote = "";
-                    noteDeleteButton.SetActive(false);
+                    //noteDeleteButton.SetActive(false);
+                    _deleteButton.MoveObjectOnClick();
                 }
             }
             
@@ -215,15 +231,30 @@ namespace BookScripts
                             AddWordInList();
                             
                             // Show buttons which save/remove new note
-                            if (!noteSaveButton.activeSelf) {noteSaveButton.SetActive(true);}
-                            if (!noteCancelButton.activeSelf) {noteCancelButton.SetActive(true);}
+                            if (!noteSaveButton.activeSelf)
+                            {
+                                noteSaveButton.SetActive(true);
+                                _saveButton.MoveObjectOnClick();
+                            }
+
+                            if (!noteCancelButton.activeSelf)
+                            {
+                                noteCancelButton.SetActive(true);
+                                _cancelButton.MoveObjectOnClick();
+                            }
+
+                            if (!noteWriteButton.activeSelf)
+                            {
+                                noteWriteButton.SetActive(true);
+                                _writeButton.MoveObjectOnClick();
+                            }
                             //Show button which start retelling this note
-                            if (!noteRetellingButton.activeSelf) {noteRetellingButton.SetActive(true);}
+                            if (!noteRetellingButton.activeSelf)
+                            {
+                                noteRetellingButton.SetActive(true);
+                                _retellingButton.MoveObjectOnClick();
+                            }
                             
-                            // Show keyboard for typing text for note
-                            if (!noteKeyboard.activeSelf) {noteKeyboard.SetActive(true);}
-                            // Show input field for show text for note
-                            if (!noteText.activeSelf) { noteText.SetActive(true); }
                         
                             // reset indices
                             _head = -1;
@@ -254,6 +285,7 @@ namespace BookScripts
                     }
                     textDisplay.selectedNote = displayedPage.text.Substring(startIndex, endIndex - startIndex + 1);
                     noteDeleteButton.SetActive(true);
+                    _deleteButton.MoveObjectOnClick();
                     return true;
                 }
             }
