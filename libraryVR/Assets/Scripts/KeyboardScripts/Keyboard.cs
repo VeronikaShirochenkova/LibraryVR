@@ -26,6 +26,10 @@ namespace KeyboardScripts
      */
         public void InsertChar(string s)
         {
+            if (inputField.text.Length == 0)
+            {
+                inputField.Select();
+            }
             inputField.text += s;
             ResetCaretPos();
         }

@@ -5,6 +5,8 @@ namespace KeyboardScripts
 {
     public class ButtonVR : MonoBehaviour
     {
+        public Keyboard keyboard;
+        public string sign;
         public GameObject button;           // ref to button body
         private GameObject presser;         // ref to presser
         private AudioSource sound;          // ref to audio source
@@ -43,9 +45,64 @@ namespace KeyboardScripts
             {
                 button.transform.localPosition = new Vector3(0, 0, 0);         // change mesh position
                 onRelease.Invoke();                                                      // invoke "onRelease" event
+                
+                if (sign.Length == 1)
+                {
+                    SendTextToInputField();
+                }
+                else switch (sign)
+                {
+                    case "Space":
+                        SendSpaceToInputField();
+                        break;
+                    case "Back":
+                        DeleteCharInInputField();
+                        break;
+                    case "Tab":
+                        SendTabToInputField();
+                        break;
+                    case "Enter":
+                        SendEnterToInputField();
+                        break;
+                    case "Caps":
+                        ChangeLetters();
+                        break;
+                }
+                
                 isPressed = false;                                                       // change bool variable
             }
         }
-    
+        
+        
+        private void SendTextToInputField()
+        {
+            keyboard.InsertChar(sign);
+        }
+        
+        private void SendSpaceToInputField()
+        {
+            keyboard.InsertSpace();
+        }
+        
+        private void DeleteCharInInputField()
+        {
+            keyboard.DeleteChar();
+        }
+        
+        private void SendTabToInputField()
+        {
+            keyboard.InsertChar("\t");
+        }
+        
+        private void SendEnterToInputField()
+        {
+            keyboard.InsertChar("\n");
+        }
+
+
+        private void ChangeLetters()
+        {
+            keyboard.CapsPressed();
+        }
     }
 }

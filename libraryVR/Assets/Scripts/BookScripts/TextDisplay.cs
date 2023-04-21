@@ -35,16 +35,23 @@ namespace BookScripts
         [SerializeField] private GameObject noteKeyboard;
         
         [SerializeField] private GameObject noteDeleteButton;               // delete existing selected note
+        private MoveObject _deleteButton;
         [SerializeField] private GameObject noteRetellingButton;
         
         
         [Header("Note parts")]
         public GameObject noteButtonPrefab;
         public GameObject noteButtonParent;
+        public GameObject notePrevButton;
+        public GameObject noteNextButton;
+        private int _allNotesPageCount;
+        private int _allNotesCurrPage;
         private List<GameObject> _buttonNotes;
 
         [HideInInspector] public string selectedNote;           // the text of the selected existing note
+        [Header("Retelling")]
         public OpenAIController aiController;
+        public GameObject retellingTablet;
         
         public List<(int, int)> words;                          // start and end index of each word selected by the marker
         
@@ -62,11 +69,12 @@ namespace BookScripts
     
         private int _pageCount;
         private int _currentPage;
+
         
         [Header("Book Search")]
-        [SerializeField] private TMP_InputField searchBox;
-        public GameObject searchButtonPrefab;
-        public GameObject searchButtonParent;
+        [SerializeField] private TMP_InputField searchInputField;
+        public GameObject searchResultButtonPrefab;
+        public GameObject searchResultButtonParent;
         private List<GameObject> _buttonSearchResults;
 
         
@@ -91,8 +99,9 @@ namespace BookScripts
             // Notes
             words = new List<(int, int)>();
             selectedNote = "";
-            _tagStart = "<color=red>";
-            _tagEnd = "</color>";
+            _tagStart = "<font=\"Brass Mono SDF\"><mark=#767EE190>";
+            _tagEnd = "</mark>";
+            
 
             // JSON
             _jsonFilePath = Path.GetDirectoryName(_filePath) + "\\" + Path.GetFileNameWithoutExtension(_filePath) + ".json";
@@ -127,6 +136,10 @@ namespace BookScripts
 
             forwardSheet.SetActive(false);
             backSheet.SetActive(false);
+
+            _deleteButton = noteDeleteButton.GetComponent<MoveObject>();
+            
+            retellingTablet.SetActive(false);
         }
         //=================== ANIMATION ===========================
         private IEnumerator TurnPageEvent()
@@ -140,12 +153,6 @@ namespace BookScripts
             while (abcPlayer.CurrentTime < abcPlayer.EndTime - 0.05f)
             {
                 abcPlayer.CurrentTime = Mathf.Lerp(abcPlayer.StartTime, abcPlayer.EndTime, elapsedTime/pageTurnTime);
-                //float norm = Mathf.Lerp(0f, 255f, elapsedTime / pageTurnTime);
-                
-                //soupIconMat.SetFloat("_Opacity", norm);
-                //titleBox.color = new Color(titleBox.color.r, titleBox.color.g, titleBox.color.b, norm);
-                //receiptBox.color = new Color(receiptBox.color.r, receiptBox.color.g, receiptBox.color.b, norm);
-            
                 elapsedTime += Time.deltaTime;
                 yield return null;
             }
@@ -163,10 +170,10 @@ namespace BookScripts
         }
         
         //=================== SEARCH ========================
-
+        
         public void SearchWholeBook()
         {
-            string text = searchBox.text;
+            string text = searchInputField.text;
             List<List<string>> allSentences = new List<List<string>>();
 
             for (int i = 0; i < _userData.chaptersCount; i++)
@@ -196,7 +203,7 @@ namespace BookScripts
                 if (allSentences[i].Count == 0) continue;
                 foreach (var sentence in allSentences[i])
                 {
-                    var newButton = Instantiate(searchButtonPrefab, searchButtonParent.transform);
+                    var newButton = Instantiate(searchResultButtonPrefab, searchResultButtonParent.transform);
                     newButton.GetComponentInChildren<TMP_Text>().text = sentence;
                     int chap = i;
                     newButton.GetComponent<Button>().onClick.AddListener(() => ShowPageWithSelectedSentence(sentence, chap));
@@ -410,34 +417,6 @@ namespace BookScripts
     
         
         //=================== NOTES ========================
-
-        public void DeleteSelectedNote()
-        {
-            if (selectedNote == "") return;
-
-            string clearNote = selectedNote.Replace(_tagStart, "").Replace(_tagEnd, "");
-
-            leftDisplayedPage.text = leftDisplayedPage.text.Replace(selectedNote, clearNote);
-            rightDisplayedPage.text = rightDisplayedPage.text.Replace(selectedNote, clearNote);
-            
-            _userData.DeleteExistingNote(clearNote, currentChapter);
-            selectedNote = "";
-            noteDeleteButton.SetActive(false);
-            DeleteNoteFormNotePage(clearNote);
-        }
-
-        public void DeleteNoteFormNotePage(string t)
-        {
-            foreach (var b in _buttonNotes)
-            {
-                if (b.GetComponentInChildren<TMP_Text>().text == t)
-                {
-                    Destroy(b);
-                    _buttonNotes.Remove(b);
-                    break;
-                }
-            }
-        }
         
         /**
          * Add all existing notes as buttons to one page
@@ -452,11 +431,80 @@ namespace BookScripts
                 foreach (var note in _userData.notes[i].notes)
                 {
                     var newButton = Instantiate(noteButtonPrefab, noteButtonParent.transform);
-                    newButton.GetComponentInChildren<TMP_Text>().text = note.highlightText;
                     int chap = i;
+                    newButton.GetComponentInChildren<TMP_Text>().text = stringChapters[chap].title.TrimEnd() + ": " + note.highlightText;
+                    
                     newButton.GetComponent<Button>().onClick.AddListener(() => ShowPageWithSelectedNote(note, chap));
                     _buttonNotes.Add(newButton);
                 }
+            }
+
+            _allNotesCurrPage = 0;
+            SetAllNotesPages();
+        }
+
+        private void SetAllNotesPages()
+        {
+            if (_buttonNotes.Count > 10)
+            {
+                _allNotesPageCount = (_buttonNotes.Count % 10 == 0) ? _buttonNotes.Count / 10 : (_buttonNotes.Count / 10) + 1;
+            
+                notePrevButton.SetActive(true);
+                noteNextButton.SetActive(true);
+
+                for (int i = 0; i <= 10; i++)
+                {
+                    _buttonNotes[i].SetActive(true);
+                }
+
+                for (int i = 10; i < _buttonNotes.Count; i++)
+                {
+                    _buttonNotes[i].SetActive(false);
+                }
+            }
+            else
+            {
+                _allNotesCurrPage = 0;
+                for (int i = 0; i < _buttonNotes.Count; i++)
+                {
+                    _buttonNotes[i].SetActive(true);
+                }
+                
+                notePrevButton.SetActive(false);
+                noteNextButton.SetActive(false);
+            }
+        }
+        
+        /**
+         * Show the next part of the note buttons in "Highlighted" paper
+         */
+        public void ShowNextPageHighlighted()
+        {
+            if(_allNotesCurrPage == _allNotesPageCount-1) return;
+            ChangeVisible();
+            _allNotesCurrPage++;
+            ChangeVisible();
+        }
+        
+        /**
+         * Show the previous part of the note buttons in "Highlighted" paper
+         */
+        public void ShowPreviousPageHighlighted()
+        {
+            if(_allNotesCurrPage == 0) return;
+            ChangeVisible();
+            _allNotesCurrPage--;
+            ChangeVisible();
+        }
+        
+        private void ChangeVisible()
+        {
+            int start = _allNotesCurrPage * 10;
+            int end = (start+10 > _buttonNotes.Count) ? _buttonNotes.Count : start+10;
+        
+            for (int i = start; i < end; i++)
+            {
+                _buttonNotes[i].SetActive(!_buttonNotes[i].activeSelf);
             }
         }
         
@@ -465,11 +513,51 @@ namespace BookScripts
          */
         private void AddNewNoteToNotePage(Note note)
         {
+            var needReset = _buttonNotes.Count == 10;
             var newButton = Instantiate(noteButtonPrefab, noteButtonParent.transform);
-            newButton.GetComponentInChildren<TMP_Text>().text = note.highlightText;
+            //newButton.GetComponentInChildren<TMP_Text>().text = note.highlightText;
             int chap = currentChapter;
+            newButton.GetComponentInChildren<TMP_Text>().text = stringChapters[chap].title.TrimEnd() + ": " + note.highlightText;
+            
             newButton.GetComponent<Button>().onClick.AddListener(() => ShowPageWithSelectedNote(note, chap));
             _buttonNotes.Add(newButton);
+            
+            if (needReset) { SetAllNotesPages(); }
+        }        
+        
+        public void DeleteNoteFormNotePage(string t)
+        {
+            foreach (var b in _buttonNotes)
+            {
+                if (b.GetComponentInChildren<TMP_Text>().text.Contains(t))
+                {
+                    int count = _buttonNotes.Count;
+                    Destroy(b);
+                    _buttonNotes.Remove(b);
+                    if (count == 11) {SetAllNotesPages();}
+                    break;
+                }
+            }
+        }        
+        
+        
+        
+
+        public void DeleteSelectedNote()
+        {
+            if (selectedNote == "") return;
+
+            string clearNote = selectedNote.Replace(_tagStart, "").Replace(_tagEnd, "");
+
+            leftDisplayedPage.text = leftDisplayedPage.text.Replace(selectedNote, clearNote);
+            rightDisplayedPage.text = rightDisplayedPage.text.Replace(selectedNote, clearNote);
+            
+            _userData.DeleteExistingNote(clearNote, currentChapter);
+            selectedNote = "";
+            
+            //noteDeleteButton.SetActive(false);
+            _deleteButton.MoveObjectOnClick();
+            DeleteNoteFormNotePage(clearNote);
         }
         
         /**
@@ -578,6 +666,7 @@ namespace BookScripts
             
             string noteForRetelling = leftDisplayedPage.text.Substring(start, end - start + 1);
             aiController.GetResponse(noteForRetelling);
+            retellingTablet.SetActive(true);
             
             
             words.Clear();

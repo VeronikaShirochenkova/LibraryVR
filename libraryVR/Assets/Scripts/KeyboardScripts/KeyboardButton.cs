@@ -15,28 +15,28 @@ namespace KeyboardScripts
             _button = GetComponentInChildren<ButtonVR>();
 
             // adding listeners to the buttons
-            if (transform.name.Length == 1)
-            {
-                _button.onRelease.AddListener(SendTextToInputField);
-            }
-            else switch (transform.name)
-            {
-                case "Space":
-                    _button.onRelease.AddListener(SendSpaceToInputField);
-                    break;
-                case "Back":
-                    _button.onRelease.AddListener(DeleteCharInInputField);
-                    break;
-                case "Tab":
-                    _button.onRelease.AddListener(SendTabToInputField);
-                    break;
-                case "Enter":
-                    _button.onRelease.AddListener(SendEnterToInputField);
-                    break;
-                case "Caps":
-                    _button.onRelease.AddListener(ChangeLetters);
-                    break;
-            }
+            // if (transform.name.Length == 1)
+            // {
+            //     //_button.onRelease.AddListener(SendTextToInputField);
+            // }
+            // else switch (transform.name)
+            // {
+            //     case "Space":
+            //         _button.onRelease.AddListener(SendSpaceToInputField);
+            //         break;
+            //     case "Back":
+            //         _button.onRelease.AddListener(DeleteCharInInputField);
+            //         break;
+            //     case "Tab":
+            //         _button.onRelease.AddListener(SendTabToInputField);
+            //         break;
+            //     case "Enter":
+            //         _button.onRelease.AddListener(SendEnterToInputField);
+            //         break;
+            //     case "Caps":
+            //         _button.onRelease.AddListener(ChangeLetters);
+            //         break;
+            // }
 
         }
         
@@ -44,7 +44,7 @@ namespace KeyboardScripts
      * action for listener;
      * call InsertChar function
      */
-        private void SendTextToInputField()
+        public void SendTextToInputField()
         {
             keyboard.InsertChar(transform.name);
         }
