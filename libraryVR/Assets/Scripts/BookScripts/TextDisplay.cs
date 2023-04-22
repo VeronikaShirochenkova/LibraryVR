@@ -1,21 +1,20 @@
 using System;
+using TMPro;
+using chatGPT;
+using System.IO;
+using UnityEngine;
+using UnityEngine.UI;
 using System.Collections;
 using System.Collections.Generic;
-using System.IO;
-using chatGPT;
-using TMPro;
-using Unity.VisualScripting;
-using UnityEditor;
-using UnityEngine;
 using UnityEngine.Formats.Alembic.Importer;
-using UnityEngine.Serialization;
-using UnityEngine.UI;
+
 
 namespace BookScripts
 {
     public class TextDisplay : MonoBehaviour
     {
         public SceneController sceneController;
+        public GameObject TOC;
         
         [Header("Book pages")]
         [SerializeField] private TMP_Text leftDisplayedPage;
@@ -25,6 +24,7 @@ namespace BookScripts
         
         [Header("Page Settings")]
         public TextSettings settings;
+        public GameObject settingsObject;
         
         [Header("Note-taking tools")]
         [SerializeField] private GameObject noteSaveButton;
@@ -108,12 +108,10 @@ namespace BookScripts
         
             if (File.Exists(_jsonFilePath))
             {
-                Debug.Log("Load data from JSON");
                 LoadUserData();
             }
             else
             {
-                Debug.Log("Create new user data");
                 _userData = new UserData(stringChapters.Count);
             }
 
@@ -140,6 +138,9 @@ namespace BookScripts
             _deleteButton = noteDeleteButton.GetComponent<MoveObject>();
             
             retellingTablet.SetActive(false);
+            
+            settingsObject.SetActive(true);
+            TOC.SetActive(true);
         }
         //=================== ANIMATION ===========================
         private IEnumerator TurnPageEvent()
@@ -260,7 +261,7 @@ namespace BookScripts
                     leftDisplayedPage.fontSize = fontSize;
                     leftDisplayedPage.ForceMeshUpdate();
                     var pc = (leftDisplayedPage.textInfo.pageCount % 2 == 0) ? leftDisplayedPage.textInfo.pageCount : leftDisplayedPage.textInfo.pageCount + 1;
-                    _userData.pages[chapter].pages.Add(pc);
+                    _userData.standardBookPages[chapter].pages.Add(pc);
                 }
             }
         }
@@ -274,7 +275,7 @@ namespace BookScripts
 
             for (int i = 0; i < currentChapter; i++)
             {
-                n += _userData.pages[i].pages[settings.currentFontSize];
+                n += _userData.standardBookPages[i].pages[settings.currentFontSize];
             }
 
             leftPageNumber.text = (n + leftDisplayedPage.pageToDisplay).ToString();
@@ -515,7 +516,6 @@ namespace BookScripts
         {
             var needReset = _buttonNotes.Count == 10;
             var newButton = Instantiate(noteButtonPrefab, noteButtonParent.transform);
-            //newButton.GetComponentInChildren<TMP_Text>().text = note.highlightText;
             int chap = currentChapter;
             newButton.GetComponentInChildren<TMP_Text>().text = stringChapters[chap].title.TrimEnd() + ": " + note.highlightText;
             

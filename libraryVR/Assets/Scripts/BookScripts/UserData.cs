@@ -12,7 +12,8 @@ namespace BookScripts
         public int fontSize;
         public int chaptersCount;
         public List<ChapterWrapper> notes;
-        public List<PageWrapper> pages;
+        public List<PageWrapper> standardBookPages;
+        public List<PageWrapper> tabletPages;
 
 
 
@@ -21,15 +22,19 @@ namespace BookScripts
             chaptersCount = chapsCount;
             fontSize = 5;
             notes = new List<ChapterWrapper>();
-            pages = new List<PageWrapper>();
+            standardBookPages = new List<PageWrapper>();
+            tabletPages = new List<PageWrapper>();
             
             for (var i = 0; i < chapsCount; i++)
             {
                 notes.Add(new ChapterWrapper());
                 notes[i].notes = new List<Note>();
                 
-                pages.Add(new PageWrapper());
-                pages[i].pages = new List<int>();
+                standardBookPages.Add(new PageWrapper());
+                standardBookPages[i].pages = new List<int>();
+                
+                tabletPages.Add(new PageWrapper());
+                tabletPages[i].pages = new List<int>();
             }
         }
 
