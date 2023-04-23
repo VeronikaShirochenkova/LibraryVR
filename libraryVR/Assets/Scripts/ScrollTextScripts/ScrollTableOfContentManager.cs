@@ -2,33 +2,30 @@ using System;
 using System.Collections.Generic;
 using TMPro;
 using UnityEngine;
-using UnityEngine.Serialization;
 using UnityEngine.UI;
 
-namespace TabletScripts
+namespace ScrollTextScripts
 {
-    public class TabletTableOfContentManager : MonoBehaviour
+    public class ScrollTableOfContentManager : MonoBehaviour
     {
         [Header("Tablet")]
-        public TabletTextDisplay tablet;
-        
+        public ScrollTextDisplay tablet;
+    
         [Header("Chapter parts")]
         public GameObject buttonPrefab;
         public GameObject buttonParent;
 
         public GameObject tocCanvas;
-
-        
+    
         private List<string> _tableOfContent;
         private List<GameObject> _buttons;
-
-        private int _numOfChapters;
+    
 
         void Start()
         {
             _buttons = new List<GameObject>();
             _tableOfContent = tablet.GetTableOfContent();
-            
+        
             // create button for each chapter
             for (var i = 0; i < _tableOfContent.Count; i++)
             {
@@ -38,23 +35,19 @@ namespace TabletScripts
                 newButton.GetComponent<Button>().onClick.AddListener(() => SelectChapter(Convert.ToInt32(newButton.name)));
                 _buttons.Add(newButton);
             }
-            
         }
 
         public void ChangeTocVisibility()
         {
             tocCanvas.SetActive(!tocCanvas.activeSelf);
         }
-        
-        
-        /**
-         * Call the function that display the selected chapter
-         */
+    
+
         private void SelectChapter(int index)
         {
             tablet.SetChapter(index, true);
-            ChangeTocVisibility();
         }
+    
 
     }
 }

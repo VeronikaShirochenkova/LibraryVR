@@ -46,11 +46,26 @@ namespace BookScripts
         {
             material.color = _assets[index].Item1;
 
-            leftPage.color = _assets[index].Item2;
-            rightPage.color = _assets[index].Item2;
+            if (leftPage)
+            {
+                leftPage.color = _assets[index].Item2;
+            }
+
+            if (rightPage)
+            {
+                rightPage.color = _assets[index].Item2;
+            }
+
+            if (leftPageNumber)
+            {
+               leftPageNumber.color = _assets[index].Item2; 
+            }
+
+            if (rightPageNumber)
+            {
+                rightPageNumber.color = _assets[index].Item2;
+            }
             
-            leftPageNumber.color = _assets[index].Item2;
-            rightPageNumber.color = _assets[index].Item2;
         }
     }
 }

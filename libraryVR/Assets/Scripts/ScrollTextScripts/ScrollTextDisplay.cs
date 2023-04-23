@@ -3,29 +3,37 @@ using System.Collections.Generic;
 using System.IO;
 using BookScripts;
 using chatGPT;
+using ScrollView;
 using TMPro;
 using UnityEngine;
+using UnityEngine.Serialization;
 using UnityEngine.UI;
 
-namespace TabletScripts
+namespace ScrollTextScripts
 {
-    public class TabletTextDisplay : MonoBehaviour
+    public class ScrollTextDisplay : MonoBehaviour
+    
     {
         public SceneController sceneController;
         public GameObject TOC;
-        [Header("Tablet pages")] 
-        [SerializeField] private TMP_Text tabletPage;
-        [SerializeField] private TMP_Text tabletPageNumber;
+        
+        [FormerlySerializedAs("tabletPage")]
+        [Header("Scroll pages")] 
+        [SerializeField] private TMP_Text scrollPage;
+
+        //[SerializeField] private GameObject content;
+        [SerializeField] private GameObject scrollView;
+        [SerializeField] private GameObject content;
 
         [Header("Page Settings")] 
         public GameObject settingsObject;
-        public TabletTextSettings settings;
+        public ScrollTextSettings settings;
         
         [Header("Note-taking tools")]
         [SerializeField] private GameObject noteSaveButton;
         [SerializeField] private GameObject noteCancelButton;
         [SerializeField] private GameObject noteWriteButton;
-
+        
         [SerializeField] private GameObject noteWriteTools;
         [SerializeField] private GameObject notePaper;
         [SerializeField] private GameObject noteKeyboard;
@@ -90,7 +98,7 @@ namespace TabletScripts
             TOC.SetActive(true);
             
             noteWriteTools.SetActive(false);
-
+            
             AddAllNotesToNotePage();
             
             // search
@@ -113,117 +121,64 @@ namespace TabletScripts
         }
         
         //==================== PAGES ======================
-        public void ShowPageNumber()
-        {
-            int n = 0;
-
-            for (int i = 0; i < currentChapter; i++)
-            {
-                n += _userData.tabletPages[i].pages[settings.currentFontSize];
-            }
-
-            tabletPageNumber.text = (n + tabletPage.pageToDisplay).ToString();
-        }
-        
-        public void CountPagesNumber()
-        {
-            for(var chapter = 0; chapter < stringChapters.Count; chapter++)
-            {
-                tabletPage.text = stringChapters[chapter].text;
-
-                foreach (var fontSize in settings.sizes)
-                {
-                    tabletPage.fontSize = fontSize;
-                    tabletPage.ForceMeshUpdate();
-                    _userData.tabletPages[chapter].pages.Add(tabletPage.textInfo.pageCount);
-                }
-            }
-        }        
+        // public void ShowPageNumber()
+        // {
+        //     int n = 0;
+        //
+        //     for (int i = 0; i < currentChapter; i++)
+        //     {
+        //         n += _userData.tabletPages[i].pages[settings.currentFontSize];
+        //     }
+        //
+        //     tabletPageNumber.text = (n + tabletPage.pageToDisplay).ToString();
+        // }
+        //
+        // public void CountPagesNumber()
+        // {
+        //     for(var chapter = 0; chapter < stringChapters.Count; chapter++)
+        //     {
+        //         tabletPage.text = stringChapters[chapter].text;
+        //
+        //         foreach (var fontSize in settings.sizes)
+        //         {
+        //             tabletPage.fontSize = fontSize;
+        //             tabletPage.ForceMeshUpdate();
+        //             _userData.tabletPages[chapter].pages.Add(tabletPage.textInfo.pageCount);
+        //         }
+        //     }
+        // }        
         
         public void SetChapter(int index, bool byContent)
         {
             if (index < 0) return;
             if (index >= stringChapters.Count) return;
             
-            tabletPage.text = stringChapters[index].text;
-            tabletPage.ForceMeshUpdate();
+            scrollPage.text = stringChapters[index].text;
+            scrollPage.ForceMeshUpdate();
+            LayoutRebuilder.ForceRebuildLayoutImmediate(scrollView.GetComponent<RectTransform>());
             
+
             if (index >= currentChapter || byContent)
             {
                 currentChapter = index;
-                SetStartPages();
+                scrollView.GetComponent<ScrollRect>().verticalNormalizedPosition = 1.0f;
             }
             else if(index < currentChapter)
             {
                 currentChapter = index;
-                SetPrevPages();
+                scrollView.GetComponent<ScrollRect>().verticalNormalizedPosition = 0.0f;
             }
             
             ShowAllNotesOnPage();
-            ShowPageNumber();
+            //ShowPageNumber();
         }
         
-        public void PreviousPage()
-        {
-            if (_currentPage > 1)
-            {
-                _currentPage -= 1;
-                tabletPage.pageToDisplay = _currentPage;
-            }
-            else
-            {
-                GetPreviousChapter();
-            }
-            
-            ShowPageNumber();
-        }
         
-        /**
-         * show next page
-         */
-        public void NextPage()
-        {
-            if (_currentPage < _pageCount )
-            {
-                _currentPage += 1;
-                tabletPage.pageToDisplay = _currentPage;
-            }
-            else
-            {
-                GetNextChapter();
-            }
-            ShowPageNumber();
-        }            
-        /**
-         * Displays the page numbers
-         */
-        
-        private void SetStartPages()
-        {
-            _currentPage = 1;
-            tabletPage.pageToDisplay = _currentPage;
-            tabletPage.ForceMeshUpdate();
-            
-            _pageCount = tabletPage.textInfo.pageCount;
-        }
-        
-        private void SetPrevPages()
-        {
-            _currentPage = 1;
-            tabletPage.pageToDisplay = _currentPage;
-            
-            _pageCount = tabletPage.textInfo.pageCount;
-
-            _currentPage = _pageCount;
-            
-            tabletPage.pageToDisplay = _currentPage;
-            tabletPage.ForceMeshUpdate();
-        }
         
         /**
          *  Set next chapter
          */
-        private void GetNextChapter()
+        public void GetNextChapter()
         {
             SetChapter(currentChapter + 1, false);
         }
@@ -231,7 +186,7 @@ namespace TabletScripts
         /**
          * Set previous chapter
          */
-        private void GetPreviousChapter()
+        public void GetPreviousChapter()
         {
             SetChapter(currentChapter - 1, false);
         }
@@ -296,7 +251,7 @@ namespace TabletScripts
 
             string clearNote = selectedNote.Replace(_tagStart, "").Replace(_tagEnd, "");
 
-            tabletPage.text = tabletPage.text.Replace(selectedNote, clearNote);
+            scrollPage.text = scrollPage.text.Replace(selectedNote, clearNote);
             
             _userData.DeleteExistingNote(clearNote, currentChapter);
             selectedNote = "";
@@ -311,14 +266,43 @@ namespace TabletScripts
         private void ShowPageWithSelectedNote(Note note, int chapter)
         {
             SetChapter(chapter, true);
+            scrollPage.ForceMeshUpdate();
             int charIndex = stringChapters[currentChapter].text.IndexOf(note.highlightText, StringComparison.Ordinal);
-            int pageIndex = tabletPage.textInfo.characterInfo[charIndex].pageNumber + 1;
+
+            TMP_Text text = scrollPage;
+            // Получаем позицию символа в тексте
+            TMP_CharacterInfo charInfo = text.textInfo.characterInfo[charIndex];
+            //int line = charInfo.lineNumber;
+            //float charYPos = text.textInfo.lineInfo[line].baseline + charInfo.baseLine;
+            float charYPos = charInfo.bottomLeft.y;
+            Debug.Log("charYPos: " + charYPos);
+
+            // Получаем высоту видимой области ScrollView
+            RectTransform viewport = scrollView.GetComponent<ScrollRect>().viewport;
+            float viewportHeight = viewport.rect.height;
+            
+            Debug.Log("viewportHeight" + viewportHeight);
+
+            // Вычисляем позицию, к которой нужно проскроллиться
+            var rect = text.rectTransform.rect;
+
+            Debug.Log("Height rect: " + rect.height);
+            Debug.Log("Rect h half: " + rect.height / 2.0f);
+
+            float times = rect.height - (rect.height/2.0f - charYPos);
+            Debug.Log("times: " + times);
+            
+            float scrollPos = times/rect.height;
+            Debug.Log("VH: " + viewportHeight + " scroll pos: " + scrollPos );
+            
+
+            // Проскролливаем ScrollView
+            //scrollView.GetComponent<ScrollRect>().verticalNormalizedPosition = 0f + (scrollPosY / rect.height);
+            scrollView.GetComponent<ScrollRect>().verticalNormalizedPosition = scrollPos ;
+            
+            Debug.Log("Final: " + scrollPos);
 
 
-            _currentPage = pageIndex;
-            tabletPage.pageToDisplay = _currentPage;
-
-            ShowPageNumber();
         }
         
         public void ShowAllNotesOnPage()
@@ -326,7 +310,7 @@ namespace TabletScripts
             // if chapter doesn't have notes
             if (_userData.notes[currentChapter].notes.Count == 0) return;
 
-            string left = tabletPage.text;
+            string left = scrollPage.text;
 
             
             foreach (var note in _userData.notes[currentChapter].notes)
@@ -334,7 +318,7 @@ namespace TabletScripts
                 left = left.Replace(note.highlightText, _tagStart+note.highlightText+_tagEnd);
             }
 
-            tabletPage.text = left;
+            scrollPage.text = left;
         }
         
         public void SaveNoteOnPage()
@@ -348,9 +332,9 @@ namespace TabletScripts
                 end = (word.Item2 > end) ? word.Item2 : end;
             }
 
-            string oldText = tabletPage.text.Substring(start, end - start + 1);
+            string oldText = scrollPage.text.Substring(start, end - start + 1);
             
-            tabletPage.text = tabletPage.text.Replace(oldText, _tagStart + oldText + _tagEnd);
+            scrollPage.text = scrollPage.text.Replace(oldText, _tagStart + oldText + _tagEnd);
 
             words.Clear();
             
@@ -370,12 +354,12 @@ namespace TabletScripts
             // deactivate "retelling" button
             noteRetellingButton.SetActive(false);
 
-            noteWriteTools.SetActive(false);
-            //// deactivate keyboard
-            //noteKeyboard.SetActive(false);
-            //// deactivate input field
-            //inputNote.text = "";
-            //notePaper.SetActive(false);
+            
+            // deactivate keyboard
+            noteKeyboard.SetActive(false);
+            // deactivate input field
+            inputNote.text = "";
+            notePaper.SetActive(false);
         }
         
         public void GetNoteForRetelling()
@@ -389,7 +373,7 @@ namespace TabletScripts
                 end = (word.Item2 > end) ? word.Item2 : end;
             }
             
-            string noteForRetelling = tabletPage.text.Substring(start, end - start + 1);
+            string noteForRetelling = scrollPage.text.Substring(start, end - start + 1);
             aiController.GetResponse(noteForRetelling);
             retellingTablet.SetActive(true);
             
@@ -405,16 +389,15 @@ namespace TabletScripts
             // deactivate "retelling" button
             noteRetellingButton.SetActive(false);
             
-            noteWriteTools.SetActive(false);
-            //// deactivate keyboard
-            //noteKeyboard.SetActive(false);
-            //// deactivate input field
-            //var inputNote = notePaper.GetComponentInChildren<TMP_InputField>();
-            //inputNote.text = "";
-            //notePaper.SetActive(false);
+            // deactivate keyboard
+            noteKeyboard.SetActive(false);
+            // deactivate input field
+            var inputNote = notePaper.GetComponentInChildren<TMP_InputField>();
+            inputNote.text = "";
+            notePaper.SetActive(false);
             
             
-            tabletPage.ForceMeshUpdate();
+            scrollPage.ForceMeshUpdate();
         }
         
         public void RemoveNoteOnPage()
@@ -432,25 +415,31 @@ namespace TabletScripts
             // deactivate "retelling" button
             noteRetellingButton.SetActive(false);
             
-            noteWriteTools.SetActive(false);
-            // // deactivate keyboard
-            // noteKeyboard.SetActive(false);
-            // // deactivate input field
-            // var inputNote = notePaper.GetComponentInChildren<TMP_InputField>();
-            // inputNote.text = "";
-            // notePaper.SetActive(false);
+            // deactivate keyboard
+            noteKeyboard.SetActive(false);
+            // deactivate input field
+            var inputNote = notePaper.GetComponentInChildren<TMP_InputField>();
+            inputNote.text = "";
+            notePaper.SetActive(false);
             
-            tabletPage.ForceMeshUpdate();
+            scrollPage.ForceMeshUpdate();
         }
         
         public void KeyboardAndNotePaperVisibility()
         {
+            noteKeyboard.SetActive(!noteKeyboard.activeSelf);
+
             if (notePaper.activeSelf)
             {
                 notePaper.GetComponentInChildren<TMP_InputField>().text = "";
+                notePaper.SetActive(false);
             }
-            noteWriteTools.SetActive(!noteWriteTools.activeSelf);
+            else
+            {
+                notePaper.SetActive(true);
+            }
         }
+        
         
         //=================== SEARCH ========================
         
@@ -514,15 +503,16 @@ namespace TabletScripts
         private void ShowPageWithSelectedSentence(string sentence, int chapter)
         {
             SetChapter(chapter, true);
-            int charIndex = stringChapters[currentChapter].text.IndexOf(sentence, StringComparison.Ordinal);
-            int pageIndex = tabletPage.textInfo.characterInfo[charIndex].pageNumber + 1;
-            
-            _currentPage = pageIndex;
-            tabletPage.pageToDisplay = _currentPage;
-
-            ShowPageNumber();
+            // int charIndex = stringChapters[currentChapter].text.IndexOf(sentence, StringComparison.Ordinal);
+            // int pageIndex = scrollPage.textInfo.characterInfo[charIndex].pageNumber + 1;
+            //
+            // _currentPage = pageIndex;
+            // tabletPage.pageToDisplay = _currentPage;
+            //
+            // ShowPageNumber();
             search.SetActive(false);
-        }        
+        }
+        
         
         //=================== JSON ========================
         public void LoadUserData()
@@ -549,9 +539,10 @@ namespace TabletScripts
         
         public void SetFontSizeFromJson()
         {
-            tabletPage.fontSize = settings.sizes[_userData.fontSize];
+            scrollPage.fontSize = settings.sizes[_userData.fontSize];
             settings.currentFontSize = _userData.fontSize;
             settings.SetButtonsVisibility();
         }
     }
 }
+
