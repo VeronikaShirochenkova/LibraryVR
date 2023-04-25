@@ -110,10 +110,10 @@ namespace ScrollView
                     TMP_CharacterInfo cInfo = page.textInfo.characterInfo[i];
 
                     // get word position of char
-                    Vector3 worldBottomLeft = transform.TransformPoint(cInfo.bottomLeft);
-                    Vector3 worldBottomRight = transform.TransformPoint(cInfo.bottomRight);
-                    Vector3 worldTopLeft = transform.TransformPoint(cInfo.topLeft);
-                    Vector3 worldTopRight = transform.TransformPoint(cInfo.topRight);
+                    Vector3 worldBottomLeft = content.transform.TransformPoint(cInfo.bottomLeft);
+                    Vector3 worldBottomRight = content.transform.TransformPoint(cInfo.bottomRight);
+                    Vector3 worldTopLeft = content.transform.TransformPoint(cInfo.topLeft);
+                    Vector3 worldTopRight = content.transform.TransformPoint(cInfo.topRight);
                     
                     // check if ray hit this char
                     bool res = PointInsideRectangle(handHitInfo.worldPosition, 

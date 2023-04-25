@@ -18088,8 +18088,8 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: 0.00062561035, y: -0.000061035156}
-  m_SizeDelta: {x: 183, y: 0}
+  m_AnchoredPosition: {x: 0.00062561035, y: 0.000030517578}
+  m_SizeDelta: {x: 183, y: 833.31}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &456601265
 MonoBehaviour:
@@ -18125,14 +18125,15 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: Lorem Ipsum is simply dummy text of the printing and typesetting industry.
+  m_text: "Lorem\"<font=\"Brass Mono SDF\"><mark=#767EE190>\";\r\n            _tagEnd
+    = \"</mark>\" Ipsum is simply dummy text of the printing and typesetting industry.
     Lorem Ipsum has been the industry's standard dummy text ever since the 1500s,
     when an unknown printer took a galley of type and scrambled it to make a type
     specimen book. It has survived not only five centuries, but also the leap into
     electronic typesetting, remaining essentially unchanged. It was popularised in
     the 1960s with the release of Letraset sheets containing Lorem Ipsum passages,
     and more recently with desktop publishing software like Aldus PageMaker including
-    versions of Lorem Ipsum
+    versions of Lorem Ipsum"
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: 3b00057367351aa4182f93de7f53fb70, type: 2}
   m_sharedMaterial: {fileID: 3414027331772544360, guid: 3b00057367351aa4182f93de7f53fb70,
@@ -22777,8 +22778,8 @@ MonoBehaviour:
   m_TargetGraphic: {fileID: 1783008166}
   m_HandleRect: {fileID: 1783008165}
   m_Direction: 2
-  m_Value: 0.50000006
-  m_Size: 0.33656904
+  m_Value: 0.49999988
+  m_Size: 0.31247675
   m_NumberOfSteps: 0
   m_OnValueChanged:
     m_PersistentCalls:
@@ -45946,9 +45947,9 @@ RectTransform:
   m_RootOrder: -1
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
-  m_AnchorMax: {x: 0, y: 0}
+  m_AnchorMax: {x: 1, y: 1}
   m_AnchoredPosition: {x: 0, y: 0}
-  m_SizeDelta: {x: 0, y: 0}
+  m_SizeDelta: {x: -10.06, y: 0}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &1165135304
 MonoBehaviour:
@@ -53184,7 +53185,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!114 &1347063951
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -70633,8 +70634,8 @@ RectTransform:
   m_Father: {fileID: 733413524}
   m_RootOrder: -1
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
-  m_AnchorMin: {x: 0, y: 0}
-  m_AnchorMax: {x: 0, y: 0}
+  m_AnchorMin: {x: 0, y: 0.34376153}
+  m_AnchorMax: {x: 1, y: 0.6562383}
   m_AnchoredPosition: {x: 0, y: 0}
   m_SizeDelta: {x: 20, y: 20}
   m_Pivot: {x: 0.5, y: 0.5}
@@ -80830,7 +80831,7 @@ MeshRenderer:
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: 2100000, guid: 5802afa3dfac6ad4ba02ed313b41470c, type: 2}
+  - {fileID: 2100000, guid: 7b62f7711e43b974dbc72d5cf9af79ac, type: 2}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0
@@ -102452,22 +102453,22 @@ PrefabInstance:
     - target: {fileID: 1846541960116590275, guid: 5e2e9a0ae6a1a21439c0c67f56aa1a32,
         type: 3}
       propertyPath: m_SizeDelta.x
-      value: -6.5823364
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 1904535757443699790, guid: 5e2e9a0ae6a1a21439c0c67f56aa1a32,
         type: 3}
       propertyPath: m_AnchorMax.x
-      value: 1
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 1904535757443699790, guid: 5e2e9a0ae6a1a21439c0c67f56aa1a32,
         type: 3}
       propertyPath: m_AnchorMax.y
-      value: 1
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 1904535757443699790, guid: 5e2e9a0ae6a1a21439c0c67f56aa1a32,
         type: 3}
       propertyPath: m_AnchorMin.y
-      value: 0.6367759
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 2426848456276082712, guid: 5e2e9a0ae6a1a21439c0c67f56aa1a32,
         type: 3}
@@ -102517,17 +102518,17 @@ PrefabInstance:
     - target: {fileID: 3455613718232168808, guid: 5e2e9a0ae6a1a21439c0c67f56aa1a32,
         type: 3}
       propertyPath: m_AnchorMax.x
-      value: 1
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 3455613718232168808, guid: 5e2e9a0ae6a1a21439c0c67f56aa1a32,
         type: 3}
       propertyPath: m_AnchorMax.y
-      value: 1
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 3455613718232168808, guid: 5e2e9a0ae6a1a21439c0c67f56aa1a32,
         type: 3}
       propertyPath: m_SizeDelta.x
-      value: -10.69
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 3577631546891347504, guid: 5e2e9a0ae6a1a21439c0c67f56aa1a32,
         type: 3}
@@ -102652,7 +102653,7 @@ PrefabInstance:
     - target: {fileID: 5593779238064950738, guid: 5e2e9a0ae6a1a21439c0c67f56aa1a32,
         type: 3}
       propertyPath: m_SizeDelta.x
-      value: 100
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 6215698909699792930, guid: 5e2e9a0ae6a1a21439c0c67f56aa1a32,
         type: 3}
@@ -102667,7 +102668,7 @@ PrefabInstance:
     - target: {fileID: 6219202805611869647, guid: 5e2e9a0ae6a1a21439c0c67f56aa1a32,
         type: 3}
       propertyPath: m_IsActive
-      value: 0
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 6435277612145671328, guid: 5e2e9a0ae6a1a21439c0c67f56aa1a32,
         type: 3}
@@ -102707,12 +102708,12 @@ PrefabInstance:
     - target: {fileID: 8979353545434894720, guid: 5e2e9a0ae6a1a21439c0c67f56aa1a32,
         type: 3}
       propertyPath: m_AnchorMax.x
-      value: 1
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 8979353545434894720, guid: 5e2e9a0ae6a1a21439c0c67f56aa1a32,
         type: 3}
       propertyPath: m_AnchorMax.y
-      value: 0.29815537
+      value: 0
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []

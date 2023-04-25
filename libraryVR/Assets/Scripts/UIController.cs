@@ -29,10 +29,19 @@ public class UIController : MonoBehaviour
         _xrDirectInteractor.enabled = false;
 
         _xrRayInteractor.enabled = true;
-        _xrRayInteractor2.enabled = true;
+        if (_xrRayInteractor2)
+        {
+            _xrRayInteractor2.enabled = true;
+        }
+        
         
         _actionBasedController.enableInputActions = true;
-        _actionBasedController2.enableInputActions = true;
+
+        if (_actionBasedController2)
+        {
+          _actionBasedController2.enableInputActions = true;  
+        }
+        
     }
 
     private void _UIModeCancel(InputAction.CallbackContext obj) => Invoke("DisableUI", 0.05f);
@@ -43,7 +52,10 @@ public class UIController : MonoBehaviour
 
         //_xrRayInteractor.enabled = false;
         _actionBasedController.enableInputActions = false;
-        _actionBasedController2.enableInputActions = false;
+        if (_actionBasedController2)
+        {
+            _actionBasedController2.enableInputActions = false;  
+        }
     }
 
     private void OnDisable()

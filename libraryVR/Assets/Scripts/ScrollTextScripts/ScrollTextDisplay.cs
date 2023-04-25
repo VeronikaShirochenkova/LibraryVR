@@ -270,39 +270,17 @@ namespace ScrollTextScripts
             int charIndex = stringChapters[currentChapter].text.IndexOf(note.highlightText, StringComparison.Ordinal);
 
             TMP_Text text = scrollPage;
-            // Получаем позицию символа в тексте
+
             TMP_CharacterInfo charInfo = text.textInfo.characterInfo[charIndex];
-            //int line = charInfo.lineNumber;
-            //float charYPos = text.textInfo.lineInfo[line].baseline + charInfo.baseLine;
+
             float charYPos = charInfo.bottomLeft.y;
-            Debug.Log("charYPos: " + charYPos);
-
-            // Получаем высоту видимой области ScrollView
-            RectTransform viewport = scrollView.GetComponent<ScrollRect>().viewport;
-            float viewportHeight = viewport.rect.height;
             
-            Debug.Log("viewportHeight" + viewportHeight);
-
-            // Вычисляем позицию, к которой нужно проскроллиться
             var rect = text.rectTransform.rect;
-
-            Debug.Log("Height rect: " + rect.height);
-            Debug.Log("Rect h half: " + rect.height / 2.0f);
-
             float times = rect.height - (rect.height/2.0f - charYPos);
-            Debug.Log("times: " + times);
-            
             float scrollPos = times/rect.height;
-            Debug.Log("VH: " + viewportHeight + " scroll pos: " + scrollPos );
             
-
-            // Проскролливаем ScrollView
-            //scrollView.GetComponent<ScrollRect>().verticalNormalizedPosition = 0f + (scrollPosY / rect.height);
             scrollView.GetComponent<ScrollRect>().verticalNormalizedPosition = scrollPos ;
             
-            Debug.Log("Final: " + scrollPos);
-
-
         }
         
         public void ShowAllNotesOnPage()
@@ -503,13 +481,20 @@ namespace ScrollTextScripts
         private void ShowPageWithSelectedSentence(string sentence, int chapter)
         {
             SetChapter(chapter, true);
-            // int charIndex = stringChapters[currentChapter].text.IndexOf(sentence, StringComparison.Ordinal);
-            // int pageIndex = scrollPage.textInfo.characterInfo[charIndex].pageNumber + 1;
-            //
-            // _currentPage = pageIndex;
-            // tabletPage.pageToDisplay = _currentPage;
-            //
-            // ShowPageNumber();
+            scrollPage.ForceMeshUpdate();
+            int charIndex = stringChapters[currentChapter].text.IndexOf(sentence, StringComparison.Ordinal);
+            
+            TMP_Text text = scrollPage;
+            TMP_CharacterInfo charInfo = text.textInfo.characterInfo[charIndex];
+
+            float charYPos = charInfo.bottomLeft.y;
+
+            var rect = text.rectTransform.rect;
+            float times = rect.height - (rect.height/2.0f - charYPos);
+            float scrollPos = times/rect.height;
+            
+            scrollView.GetComponent<ScrollRect>().verticalNormalizedPosition = scrollPos ;
+
             search.SetActive(false);
         }
         
