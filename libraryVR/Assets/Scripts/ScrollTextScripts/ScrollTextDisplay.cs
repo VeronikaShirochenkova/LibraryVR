@@ -20,6 +20,7 @@ namespace ScrollTextScripts
         [FormerlySerializedAs("tabletPage")]
         [Header("Scroll pages")] 
         [SerializeField] private TMP_Text scrollPage;
+        [SerializeField] private TMP_Text scrollPageNumber;
 
         //[SerializeField] private GameObject content;
         [SerializeField] private GameObject scrollView;
@@ -89,22 +90,29 @@ namespace ScrollTextScripts
             
             //JSON
             _jsonFilePath = Path.GetDirectoryName(_filePath) + "\\" + Path.GetFileNameWithoutExtension(_filePath) + ".json";
-            if (File.Exists(_jsonFilePath)) { LoadUserData(); }
-            else { _userData = new UserData(stringChapters.Count); }
+            if (File.Exists(_jsonFilePath))
+            {
+                LoadUserData();
+            }
+            else
+            {
+                _userData = new UserData(stringChapters.Count);
+            }
             
-            // set text
-            currentChapter = 0;
-            settingsObject.SetActive(true);
-            TOC.SetActive(true);
-            
-            noteWriteTools.SetActive(false);
+            SetChapter(_userData.chapterBookmarkScrollPage, false);
+            _currentPage = 1;
+            //SetPage(_userData.pageBookmarkScrollPage);
             
             AddAllNotesToNotePage();
             
             // search
             _buttonSearchResults = new List<GameObject>();
             
-            SetChapter(currentChapter, false);
+            noteWriteTools.SetActive(false);
+            
+            // set text
+            settingsObject.SetActive(true);
+            TOC.SetActive(true);
         }
         
         //=================== TABLE OF CONTENT ========================
@@ -121,32 +129,61 @@ namespace ScrollTextScripts
         }
         
         //==================== PAGES ======================
-        // public void ShowPageNumber()
-        // {
-        //     int n = 0;
-        //
-        //     for (int i = 0; i < currentChapter; i++)
-        //     {
-        //         n += _userData.tabletPages[i].pages[settings.currentFontSize];
-        //     }
-        //
-        //     tabletPageNumber.text = (n + tabletPage.pageToDisplay).ToString();
-        // }
-        //
-        // public void CountPagesNumber()
-        // {
-        //     for(var chapter = 0; chapter < stringChapters.Count; chapter++)
-        //     {
-        //         tabletPage.text = stringChapters[chapter].text;
-        //
-        //         foreach (var fontSize in settings.sizes)
-        //         {
-        //             tabletPage.fontSize = fontSize;
-        //             tabletPage.ForceMeshUpdate();
-        //             _userData.tabletPages[chapter].pages.Add(tabletPage.textInfo.pageCount);
-        //         }
-        //     }
-        // }        
+        public void ShowPageNumber()
+        {
+            int n = 0;
+        
+            for (int i = 0; i < currentChapter; i++)
+            {
+                n += _userData.scrollPages[i].pages[settings.currentFontSize];
+            }
+        
+            scrollPageNumber.text = (n + _currentPage).ToString();
+        }
+        
+        public void CountPagesNumber()
+        {
+            for(var chapter = 0; chapter < stringChapters.Count; chapter++)
+            {
+                scrollPage.text = stringChapters[chapter].text;
+        
+                foreach (var fontSize in settings.sizes)
+                {
+                    scrollPage.fontSize = fontSize;
+                    LayoutRebuilder.ForceRebuildLayoutImmediate(scrollPage.GetComponent<RectTransform>());
+                    scrollPage.ForceMeshUpdate();
+                    
+                    RectTransform viewport = scrollView.GetComponent<ScrollRect>().viewport;
+                    float num = scrollPage.rectTransform.rect.height / viewport.rect.height;
+                    num = ((num * 10) % 10 != 0) ? num + 1 : num;
+                    
+                    _userData.scrollPages[chapter].pages.Add((int)num);
+                    Debug.Log(fontSize + " " + scrollPage.rectTransform.rect.height + " " + viewport.rect.height );
+                }
+            }
+
+            scrollPage.text = stringChapters[currentChapter].text;
+        }
+
+        public void GetCurrentPage()
+        {
+            int numOfPages = _userData.scrollPages[currentChapter].pages[settings.currentFontSize];
+            float currScrollbarPos = scrollView.GetComponent<ScrollRect>().verticalNormalizedPosition;
+            
+            for (int i = 0; i <= numOfPages; i++)
+            {
+                if (1.0f - i * (1.0f / numOfPages) >= currScrollbarPos)
+                {
+                    _currentPage = i;
+                }
+                else
+                {
+                    break;
+                }
+            }
+
+            ShowPageNumber();
+        }
         
         public void SetChapter(int index, bool byContent)
         {
@@ -154,27 +191,30 @@ namespace ScrollTextScripts
             if (index >= stringChapters.Count) return;
             
             scrollPage.text = stringChapters[index].text;
-            scrollPage.ForceMeshUpdate();
-            LayoutRebuilder.ForceRebuildLayoutImmediate(scrollView.GetComponent<RectTransform>());
             
+            LayoutRebuilder.ForceRebuildLayoutImmediate(scrollView.GetComponent<RectTransform>());
+            scrollPage.ForceMeshUpdate();
 
             if (index >= currentChapter || byContent)
             {
                 currentChapter = index;
-                scrollView.GetComponent<ScrollRect>().verticalNormalizedPosition = 1.0f;
+                if (scrollPage.rectTransform.rect.height > scrollView.GetComponent<ScrollRect>().viewport.rect.height)
+                {
+                    scrollView.GetComponent<ScrollRect>().verticalNormalizedPosition = 1.0f;
+                }
+                
             }
             else if(index < currentChapter)
             {
                 currentChapter = index;
-                scrollView.GetComponent<ScrollRect>().verticalNormalizedPosition = 0.0f;
+                scrollView.GetComponent<ScrollRect>().verticalNormalizedPosition = 0;
             }
             
             ShowAllNotesOnPage();
-            //ShowPageNumber();
+            ShowPageNumber();
         }
-        
-        
-        
+
+
         /**
          *  Set next chapter
          */
@@ -278,9 +318,8 @@ namespace ScrollTextScripts
             var rect = text.rectTransform.rect;
             float times = rect.height - (rect.height/2.0f - charYPos);
             float scrollPos = times/rect.height;
-            
-            scrollView.GetComponent<ScrollRect>().verticalNormalizedPosition = scrollPos ;
-            
+
+            scrollView.GetComponent<ScrollRect>().verticalNormalizedPosition = scrollPos;
         }
         
         public void ShowAllNotesOnPage()
@@ -511,7 +550,7 @@ namespace ScrollTextScripts
         
         public void SaveUserData()
         {
-            _userData.fontSize = settings.currentFontSize;
+            _userData.fontSizeStandardBook = settings.currentFontSize;
             
             string json = JsonUtility.ToJson(_userData);
             
@@ -524,9 +563,10 @@ namespace ScrollTextScripts
         
         public void SetFontSizeFromJson()
         {
-            scrollPage.fontSize = settings.sizes[_userData.fontSize];
-            settings.currentFontSize = _userData.fontSize;
+            scrollPage.fontSize = settings.sizes[_userData.fontSizeScrollingPage];
+            settings.currentFontSize = _userData.fontSizeScrollingPage;
             settings.SetButtonsVisibility();
+            ShowPageNumber();
         }
     }
 }

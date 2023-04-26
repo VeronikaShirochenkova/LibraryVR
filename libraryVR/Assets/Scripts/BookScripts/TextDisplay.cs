@@ -7,6 +7,7 @@ using UnityEngine.UI;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine.Formats.Alembic.Importer;
+using UnityEngine.Serialization;
 
 
 namespace BookScripts
@@ -14,7 +15,7 @@ namespace BookScripts
     public class TextDisplay : MonoBehaviour
     {
         public SceneController sceneController;
-        public GameObject TOC;
+        public GameObject tableOfContentObject;
         
         [Header("Book pages")]
         [SerializeField] private TMP_Text leftDisplayedPage;
@@ -22,9 +23,15 @@ namespace BookScripts
         [SerializeField] private TMP_Text leftPageNumber;
         [SerializeField] private TMP_Text rightPageNumber;
         
-        [Header("Page Settings")]
-        public TextSettings settings;
+        [Header("Book Settings paper")]
         public GameObject settingsObject;
+        public TextSettings settings;
+        
+        [Header("Book Search")]
+        [SerializeField] private TMP_InputField searchInputField;
+        public GameObject searchResultButtonPrefab;
+        public GameObject searchResultButtonParent;
+        private List<GameObject> _buttonSearchResults;
         
         [Header("Note-taking tools")]
         [SerializeField] private GameObject noteSaveButton;
@@ -33,13 +40,16 @@ namespace BookScripts
         
         [SerializeField] private GameObject notePaper;
         [SerializeField] private GameObject noteKeyboard;
+
+        [SerializeField] private GameObject textToNotePaper;
+        private TMP_Text _textToNote;
         
-        [SerializeField] private GameObject noteDeleteButton;               // delete existing selected note
+        [SerializeField] private GameObject noteDeleteButton;
         private MoveObject _deleteButton;
         [SerializeField] private GameObject noteRetellingButton;
         
         
-        [Header("Note parts")]
+        [Header("Page with highlighted notes")]
         public GameObject noteButtonPrefab;
         public GameObject noteButtonParent;
         public GameObject notePrevButton;
@@ -48,12 +58,20 @@ namespace BookScripts
         private int _allNotesCurrPage;
         private List<GameObject> _buttonNotes;
 
-        [HideInInspector] public string selectedNote;           // the text of the selected existing note
+        
         [Header("Retelling")]
         public OpenAIController aiController;
         public GameObject retellingTablet;
+
+        [Header("Animation")]
+        public GameObject bookMesh;
+        public GameObject forwardSheet;
+        public GameObject backSheet;
+        private AlembicStreamPlayer abcPlayer;
         
+        // Notes & Retelling
         public List<(int, int)> words;                          // start and end index of each word selected by the marker
+        [HideInInspector] public string selectedNote;           // the text of the selected existing note
         
         private string _tagStart;                               // tags for highlighting notes in text
         private string _tagEnd;                                 //
@@ -69,28 +87,12 @@ namespace BookScripts
     
         private int _pageCount;
         private int _currentPage;
-
         
-        [Header("Book Search")]
-        [SerializeField] private TMP_InputField searchInputField;
-        public GameObject searchResultButtonPrefab;
-        public GameObject searchResultButtonParent;
-        private List<GameObject> _buttonSearchResults;
-
         
-        [Header("Animation")]
-        public GameObject bookMesh;
-        public GameObject forwardSheet;
-        public GameObject backSheet;
-        
-        private AlembicStreamPlayer abcPlayer;
         
         void Start()
         {
             _filePath = PlayerPrefs.GetString("selectedBook");
-
-            // _filePath = Application.dataPath + "/Resources/Books/Fahrenheit451/Fahrenheit451_EN.epub";       // ok
-            // _filePath = Application.dataPath + "/Resources/Books/BraveNewWorld/BraveNewWorld_EN.epub";       // ok
             //_filePath = Application.dataPath + "/Resources/Books/NineteenEightyFour/1984_EN.epub";             // ok
             
             EPubBookReader reader = new EPubBookReader(_filePath);
@@ -116,18 +118,14 @@ namespace BookScripts
             }
 
             // set text
-            currentChapter = 0;
-            SetChapter(currentChapter, false);
+            SetChapter(_userData.chapterBookmarkStandardBook, false);
+            SetPage(_userData.pageBookmarkStandardBook);
             
-            
-            noteKeyboard.SetActive(false);
-            notePaper.SetActive(false);
-            
+            // add all highlighted notes to page with them
             AddAllNotesToNotePage();
             
             // search
             _buttonSearchResults = new List<GameObject>();
-            
             
             // book mesh anim
             abcPlayer = bookMesh.GetComponent<AlembicStreamPlayer>();
@@ -139,8 +137,14 @@ namespace BookScripts
             
             retellingTablet.SetActive(false);
             
+            noteKeyboard.SetActive(false); 
+            notePaper.SetActive(false);
+            
             settingsObject.SetActive(true);
-            TOC.SetActive(true);
+            tableOfContentObject.SetActive(true);
+
+            _textToNote = textToNotePaper.GetComponentInChildren<TMP_Text>();
+            textToNotePaper.SetActive(false);
         }
         //=================== ANIMATION ===========================
         private IEnumerator TurnPageEvent()
@@ -264,6 +268,8 @@ namespace BookScripts
                     _userData.standardBookPages[chapter].pages.Add(pc);
                 }
             }
+            
+            leftDisplayedPage.text = stringChapters[currentChapter].text;
         }
         
         /**
@@ -310,6 +316,23 @@ namespace BookScripts
             }
             
             ShowAllNotesOnPage();
+            ShowPageNumber();
+        }
+
+        public void SetPage(int index)
+        {
+            if (index % 2 != 0)
+            {
+                _currentPage = index;
+                leftDisplayedPage.pageToDisplay = _currentPage;
+                rightDisplayedPage.pageToDisplay = _currentPage + 1;
+            }
+            else
+            {
+                _currentPage = index - 1;
+                leftDisplayedPage.pageToDisplay = _currentPage;
+                rightDisplayedPage.pageToDisplay = _currentPage + 1;
+            }
             ShowPageNumber();
         }
         
@@ -538,9 +561,29 @@ namespace BookScripts
                     break;
                 }
             }
-        }        
-        
-        
+        }
+
+        public void ShowTextToSelectedNote()
+        {
+            if (selectedNote == "")
+            {
+                textToNotePaper.SetActive(false);
+                _textToNote.text = "";
+            }
+            
+            string clearNote = selectedNote.Replace(_tagStart, "").Replace(_tagEnd, "");
+            string t = _userData.GetTextToNote(clearNote, currentChapter);
+            if (t != "")
+            {
+                textToNotePaper.SetActive(true); 
+                _textToNote.text = t;
+            }
+            else
+            {
+                textToNotePaper.SetActive(false); 
+            }
+            
+        }
         
 
         public void DeleteSelectedNote()
@@ -774,23 +817,28 @@ namespace BookScripts
         
         public void SaveUserData()
         {
-            _userData.fontSize = settings.currentFontSize;
+            _userData.openedAsStandardBook = true;
+            
+            _userData.fontSizeStandardBook = settings.currentFontSize;
+            
+            _userData.pageBookmarkStandardBook = _currentPage;
+            _userData.chapterBookmarkStandardBook = currentChapter;
             
             string json = JsonUtility.ToJson(_userData);
             
             using StreamWriter writer = new StreamWriter(_jsonFilePath);
             writer.Write(json);
-
-
+            
             sceneController.ChangeScene();
         }
 
         public void SetFontSizeFromJson()
         {
-            leftDisplayedPage.fontSize = settings.sizes[_userData.fontSize];
-            rightDisplayedPage.fontSize = settings.sizes[_userData.fontSize];
-            settings.currentFontSize = _userData.fontSize;
+            leftDisplayedPage.fontSize = settings.sizes[_userData.fontSizeStandardBook];
+            rightDisplayedPage.fontSize = settings.sizes[_userData.fontSizeStandardBook];
+            settings.currentFontSize = _userData.fontSizeStandardBook;
             settings.SetButtonsVisibility();
+            ShowPageNumber();
         }
     }
 }

@@ -43,9 +43,7 @@ namespace ScrollView
         
             if (!File.Exists(_jsonFilePath))
             {
-                //_textDisplay.CountPagesNumber();
-                _textDisplay.SetFontSizeFromJson();
-                //_textDisplay.SetChapter(0, true);
+                StartSetUp();
             }
             else
             {
@@ -53,12 +51,21 @@ namespace ScrollView
                 string json = reader.ReadToEnd();
 
                 UserData userData = JsonUtility.FromJson<UserData>(json);
-                currentFontSize = userData.fontSize;
+                if (userData.openedAsScrollPage)
+                {
+                    _textDisplay.SetFontSizeFromJson();
+                }
+                else
+                {
+                    StartSetUp();
+                }
             }
+        }
         
-            scrollPage.fontSize = sizes[currentFontSize];
-
-            SetButtonsVisibility();
+        private void StartSetUp()
+        {
+            _textDisplay.CountPagesNumber();
+            _textDisplay.SetFontSizeFromJson();
         }
 
         public void SetButtonsVisibility()

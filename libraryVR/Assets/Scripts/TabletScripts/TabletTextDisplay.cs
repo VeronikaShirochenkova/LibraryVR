@@ -81,22 +81,27 @@ namespace TabletScripts
             
             //JSON
             _jsonFilePath = Path.GetDirectoryName(_filePath) + "\\" + Path.GetFileNameWithoutExtension(_filePath) + ".json";
-            if (File.Exists(_jsonFilePath)) { LoadUserData(); }
-            else { _userData = new UserData(stringChapters.Count); }
+            if (File.Exists(_jsonFilePath))
+            {
+                LoadUserData();
+            }
+            else
+            {
+                _userData = new UserData(stringChapters.Count);
+            }
             
-            // set text
-            currentChapter = 0;
-            settingsObject.SetActive(true);
-            TOC.SetActive(true);
+            SetChapter(_userData.chapterBookmarkTablet, false);
+            SetPage(_userData.pageBookmarkTablet);
             
-            noteWriteTools.SetActive(false);
-
             AddAllNotesToNotePage();
             
             // search
             _buttonSearchResults = new List<GameObject>();
-            
-            SetChapter(currentChapter, false);
+
+            noteWriteTools.SetActive(false);
+
+            settingsObject.SetActive(true);
+            TOC.SetActive(true);
         }
         
         //=================== TABLE OF CONTENT ========================
@@ -138,6 +143,8 @@ namespace TabletScripts
                     _userData.tabletPages[chapter].pages.Add(tabletPage.textInfo.pageCount);
                 }
             }
+
+            tabletPage.text = stringChapters[currentChapter].text;
         }        
         
         public void SetChapter(int index, bool byContent)
@@ -160,6 +167,15 @@ namespace TabletScripts
             }
             
             ShowAllNotesOnPage();
+            ShowPageNumber();
+        }
+        
+        public void SetPage(int index)
+        {
+
+            _currentPage = index;
+            tabletPage.pageToDisplay = _currentPage;
+            
             ShowPageNumber();
         }
         
@@ -536,7 +552,12 @@ namespace TabletScripts
         
         public void SaveUserData()
         {
-            _userData.fontSize = settings.currentFontSize;
+            _userData.openedAsReadingTablet = true;
+            
+            _userData.fontSizeReadingTablet = settings.currentFontSize;
+
+            _userData.pageBookmarkTablet = _currentPage;
+            _userData.chapterBookmarkTablet = currentChapter;
             
             string json = JsonUtility.ToJson(_userData);
             
@@ -549,9 +570,10 @@ namespace TabletScripts
         
         public void SetFontSizeFromJson()
         {
-            tabletPage.fontSize = settings.sizes[_userData.fontSize];
-            settings.currentFontSize = _userData.fontSize;
+            tabletPage.fontSize = settings.sizes[_userData.fontSizeReadingTablet];
+            settings.currentFontSize = _userData.fontSizeReadingTablet;
             settings.SetButtonsVisibility();
+            ShowPageNumber();
         }
     }
 }

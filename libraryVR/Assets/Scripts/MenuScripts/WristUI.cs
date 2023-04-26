@@ -8,6 +8,7 @@ namespace MenuScripts
     {
         public InputActionAsset inputActions;
         public GameObject wristMenu;
+        
 
         private InputAction _menu;
         

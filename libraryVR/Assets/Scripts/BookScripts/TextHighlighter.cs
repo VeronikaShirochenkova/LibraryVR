@@ -34,8 +34,8 @@ namespace BookScripts
         private MoveObject _deleteButton;
         [SerializeField] private GameObject noteRetellingButton;
         private MoveObject _retellingButton;
-        
-        
+
+        public GameObject noteText;
     
         // User data
         private UserData _userData;
@@ -81,6 +81,7 @@ namespace BookScripts
                     {
                         textDisplay.selectedNote = "";
                         _deleteButton.MoveObjectOnClick();
+                        textDisplay.ShowTextToSelectedNote();
                     } 
                     HighlightText();  
                 }
@@ -144,6 +145,7 @@ namespace BookScripts
                             textDisplay.selectedNote = "";
                             //noteDeleteButton.SetActive(false);
                             _deleteButton.MoveObjectOnClick();
+                            textDisplay.ShowTextToSelectedNote();
                         }
                         break;
                     }
@@ -158,6 +160,7 @@ namespace BookScripts
                     textDisplay.selectedNote = "";
                     //noteDeleteButton.SetActive(false);
                     _deleteButton.MoveObjectOnClick();
+                    textDisplay.ShowTextToSelectedNote();
                 }
             }
             
@@ -281,8 +284,10 @@ namespace BookScripts
                         return true;
                     }
                     textDisplay.selectedNote = displayedPage.text.Substring(startIndex, endIndex - startIndex + 1);
+                    textDisplay.ShowTextToSelectedNote();
                     noteDeleteButton.SetActive(true);
                     _deleteButton.MoveObjectOnClick();
+                    
                     return true;
                 }
             }

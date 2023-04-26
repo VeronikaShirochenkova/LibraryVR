@@ -42,9 +42,7 @@ namespace TabletScripts
             
             if (!File.Exists(_jsonFilePath))
             {
-                _textDisplay.CountPagesNumber();
-                _textDisplay.SetFontSizeFromJson();
-                _textDisplay.SetChapter(0, true);
+                StartSetUp();
             }
             else
             {
@@ -52,12 +50,22 @@ namespace TabletScripts
                 string json = reader.ReadToEnd();
 
                 UserData userData = JsonUtility.FromJson<UserData>(json);
-                currentFontSize = userData.fontSize;
+                if (userData.openedAsReadingTablet)
+                {
+                    _textDisplay.SetFontSizeFromJson();
+                }
+                else
+                {
+                    StartSetUp();
+                }
             }
             
-            tabletPage.fontSize = sizes[currentFontSize];
-
-            SetButtonsVisibility();
+        }
+        
+        private void StartSetUp()
+        {
+            _textDisplay.CountPagesNumber();
+            _textDisplay.SetFontSizeFromJson();
         }
 
         public void SetButtonsVisibility()

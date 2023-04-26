@@ -41,9 +41,7 @@ namespace BookScripts
             
             if (!File.Exists(_jsonFilePath))
             {
-                _textDisplay.CountPagesNumber();
-                _textDisplay.SetFontSizeFromJson();
-                _textDisplay.SetChapter(0, true);
+                StartSetUp();
             }
             else
             {
@@ -51,13 +49,21 @@ namespace BookScripts
                 string json = reader.ReadToEnd();
 
                 UserData userData = JsonUtility.FromJson<UserData>(json);
-                currentFontSize = userData.fontSize;
+                if (userData.openedAsStandardBook)
+                {
+                    _textDisplay.SetFontSizeFromJson();
+                }
+                else
+                {
+                    StartSetUp();
+                }
             }
-            
-            leftPage.fontSize = sizes[currentFontSize];
-            rightPage.fontSize = sizes[currentFontSize];
-            
-            SetButtonsVisibility();
+        }
+
+        private void StartSetUp()
+        {
+            _textDisplay.CountPagesNumber();
+            _textDisplay.SetFontSizeFromJson();
         }
 
         public void SetButtonsVisibility()

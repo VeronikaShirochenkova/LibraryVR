@@ -36,17 +36,10 @@ namespace MenuScripts
                  projector.material.SetTexture("Base_Map", defaultTexture);
                  return;
              }
-             
-             //     decalMaterial.SetTexture("_BaseMap", tex);
-            //     return;
-            // }
-            //
+
             bookCoverImage.LoadImage(book.CoverImage);
             projector.material.SetTexture("Base_Map", bookCoverImage);
-            
-            // tex.LoadImage(book.CoverImage);
-            // //_bookImage = Sprite.Create(tex, new Rect(0, 0, tex.width, tex.height), new Vector2(tex.width/2, tex.height/2));
-            // _bookCover = tex;
+
         }
     
     }
