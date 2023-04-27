@@ -6,11 +6,17 @@ EditorBuildSettings:
   serializedVersion: 2
   m_Scenes:
   - enabled: 1
-    path: Assets/Scenes/MainMenu.unity
+    path: Assets/Scenes/MainMenu/MainMenu.unity
     guid: 99c9720ab356a0642a771bea13969a05
   - enabled: 1
-    path: Assets/Scenes/ReadBook.unity
-    guid: 5b94b0104774ee942858ad60df68d4e4
+    path: Assets/Scenes/StandardBookScene/StandardBook.unity
+    guid: f40486b90e304bd4cb7c5beddfad7e35
+  - enabled: 1
+    path: Assets/Scenes/ReadingTabletScene/ReadingTabletScene.unity
+    guid: ae1e2096fa6e9254a9d214ac7d7375c4
+  - enabled: 1
+    path: Assets/Scenes/ScrollBookScene/ScrollBookScene.unity
+    guid: b67c5eda678dd7140b73da21076f522c
   m_configObjects:
     com.unity.xr.management.loader_settings: {fileID: 11400000, guid: 464fba160a6287f44a6b1d3d2e51b8dd,
       type: 2}
