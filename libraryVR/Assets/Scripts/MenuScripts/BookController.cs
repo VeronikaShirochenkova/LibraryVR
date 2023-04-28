@@ -21,7 +21,7 @@ namespace MenuScripts
         private string _directoryPath;
 
         private int _sceneID;
-        private int _roomID;
+        private int _bookFormatID;
 
 
         private void Start()
@@ -103,11 +103,11 @@ namespace MenuScripts
 
         public void StartRead()
         {
-            _sceneID = bookFormatController.sceneIndex + 1;
-            _roomID = roomFormatController.roomIndex;
+            _sceneID = roomFormatController.roomIndex + 1;
+            _bookFormatID = bookFormatController.bookIndex;
             
             PlayerPrefs.SetString("selectedBook", _books[_currentIndex].FilePath);
-            PlayerPrefs.SetInt("selectedRoom", _roomID);
+            PlayerPrefs.SetInt("selectedBookFormat", _bookFormatID);
             PlayerPrefs.Save();
             
             Debug.Log("Selected book file path: " + PlayerPrefs.GetString("selectedBook"));

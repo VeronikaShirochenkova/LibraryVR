@@ -27,7 +27,7 @@ namespace BookScripts
             Color pageColor3 = new Color(0.98f, 0.98f, 0.98f);
            
             //Color textColor1 = new Color(63, 63, 63, 255);
-            Color textColor1 = new Color(0.25f, 0.25f, 0.25f, 1.0f);
+            Color textColor1 = new Color(0f, 0f, 0f, 0.98f);
             //Color textColor2 = new Color(255, 255,255,190);
             Color textColor2 = new Color(1.0f, 1.0f,1.0f,0.75f);
             //Color textColor3 = new Color(0, 0, 0, 250);

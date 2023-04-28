@@ -1,4 +1,5 @@
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.IO;
 using BookScripts;
@@ -25,6 +26,7 @@ namespace ScrollTextScripts
         //[SerializeField] private GameObject content;
         [SerializeField] private GameObject scrollView;
         [SerializeField] private GameObject content;
+        [SerializeField] private ScrollRect rect;
 
         [Header("Page Settings")] 
         public GameObject settingsObject;
@@ -100,8 +102,9 @@ namespace ScrollTextScripts
             }
             
             SetChapter(_userData.chapterBookmarkScrollPage, false);
-            _currentPage = 1;
             //SetPage(_userData.pageBookmarkScrollPage);
+            //_currentPage = 1;
+            
             
             AddAllNotesToNotePage();
             
@@ -138,7 +141,7 @@ namespace ScrollTextScripts
                 n += _userData.scrollPages[i].pages[settings.currentFontSize];
             }
         
-            scrollPageNumber.text = (n + _currentPage).ToString();
+            scrollPageNumber.text = (n + _currentPage + 1).ToString();
         }
         
         public void CountPagesNumber()
@@ -158,7 +161,7 @@ namespace ScrollTextScripts
                     num = ((num * 10) % 10 != 0) ? num + 1 : num;
                     
                     _userData.scrollPages[chapter].pages.Add((int)num);
-                    Debug.Log(fontSize + " " + scrollPage.rectTransform.rect.height + " " + viewport.rect.height );
+                    //Debug.Log(fontSize + " " + scrollPage.rectTransform.rect.height + " " + viewport.rect.height );
                 }
             }
 
@@ -181,7 +184,7 @@ namespace ScrollTextScripts
                     break;
                 }
             }
-
+            Debug.Log("get: " + _currentPage);
             ShowPageNumber();
         }
         
@@ -191,16 +194,21 @@ namespace ScrollTextScripts
             if (index >= stringChapters.Count) return;
             
             scrollPage.text = stringChapters[index].text;
-            
-            LayoutRebuilder.ForceRebuildLayoutImmediate(scrollView.GetComponent<RectTransform>());
+            ShowAllNotesOnPage();
             scrollPage.ForceMeshUpdate();
+            
+            LayoutRebuilder.ForceRebuildLayoutImmediate(scrollPage.GetComponent<RectTransform>());
+            scrollPage.ForceMeshUpdate();
+            
 
             if (index >= currentChapter || byContent)
             {
                 currentChapter = index;
+                
                 if (scrollPage.rectTransform.rect.height > scrollView.GetComponent<ScrollRect>().viewport.rect.height)
                 {
-                    scrollView.GetComponent<ScrollRect>().verticalNormalizedPosition = 1.0f;
+                    //scrollView.GetComponentInChildren<ScrollRect>().verticalNormalizedPosition = 0.49f;
+                    StartCoroutine(SetScrollPositionCoroutine(scrollView.GetComponentInChildren<ScrollRect>(), 1f));
                 }
                 
             }
@@ -210,7 +218,27 @@ namespace ScrollTextScripts
                 scrollView.GetComponent<ScrollRect>().verticalNormalizedPosition = 0;
             }
             
-            ShowAllNotesOnPage();
+            
+            ShowPageNumber();
+        }
+        
+        private IEnumerator SetScrollPositionCoroutine(ScrollRect scr, float value)
+        {
+            yield return new WaitForEndOfFrame();
+            scr.verticalNormalizedPosition = value;;
+        }
+
+        public void SetPage(int page)
+        {
+            
+            
+            RectTransform viewport = scrollView.GetComponent<ScrollRect>().viewport;
+            float num = scrollPage.rectTransform.rect.height / viewport.rect.height;
+            num = ((num * 10) % 10 != 0) ? num + 1 : num;
+            Debug.Log(page + " " + num);
+            float value = 1.0f - page / num;
+            StartCoroutine(SetScrollPositionCoroutine(scrollView.GetComponent<ScrollRect>(), value));
+            _currentPage = page;
             ShowPageNumber();
         }
 
@@ -550,7 +578,13 @@ namespace ScrollTextScripts
         
         public void SaveUserData()
         {
-            _userData.fontSizeStandardBook = settings.currentFontSize;
+            _userData.openedAsScrollPage = true;
+            
+            _userData.fontSizeScrollingPage = settings.currentFontSize;
+            
+            Debug.Log("save: " + _currentPage);
+            _userData.pageBookmarkScrollPage = _currentPage;
+            _userData.chapterBookmarkScrollPage = currentChapter;
             
             string json = JsonUtility.ToJson(_userData);
             
@@ -566,7 +600,10 @@ namespace ScrollTextScripts
             scrollPage.fontSize = settings.sizes[_userData.fontSizeScrollingPage];
             settings.currentFontSize = _userData.fontSizeScrollingPage;
             settings.SetButtonsVisibility();
-            ShowPageNumber();
+            LayoutRebuilder.ForceRebuildLayoutImmediate(scrollPage.GetComponent<RectTransform>());
+            scrollPage.ForceMeshUpdate();
+            SetPage(_userData.pageBookmarkScrollPage);
+            //ShowPageNumber();
         }
     }
 }

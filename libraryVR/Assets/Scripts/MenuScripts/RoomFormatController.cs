@@ -41,7 +41,6 @@ namespace MenuScripts
             {
                 roomIndex++;
             }
-            //roomIndex = roomIndex == _roomCount - 1 ? 0 : roomIndex++;
             ShowRoomFormat();
         }
         

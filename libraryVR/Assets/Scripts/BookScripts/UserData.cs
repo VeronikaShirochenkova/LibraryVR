@@ -47,7 +47,7 @@ namespace BookScripts
             pageBookmarkTablet = 1;
             
             chapterBookmarkScrollPage = 0;
-            pageBookmarkScrollPage = 1;
+            pageBookmarkScrollPage = 0;
             
             fontSizeStandardBook = 5;
             fontSizeReadingTablet = 5;

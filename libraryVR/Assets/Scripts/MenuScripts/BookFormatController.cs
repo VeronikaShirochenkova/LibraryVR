@@ -15,34 +15,33 @@ namespace MenuScripts
         public DecalProjector projector;
         public TMP_Text bookFormatName;
 
-        private int _sceneCount;
-        [HideInInspector] public int sceneIndex;
+        private int _bookCount;
+        [HideInInspector] public int bookIndex;
         
         void Start()
         {
-            _sceneCount = bookFormats.Count;
-            sceneIndex = 0;
+            _bookCount = bookFormats.Count;
+            bookIndex = 0;
             
             ShowBookFormat();
         }
 
         private void ShowBookFormat()
         {
-            projector.material.SetTexture("Base_Map", bookFormats[sceneIndex]);
-            bookFormatName.text = bookFormatsNames[sceneIndex];
+            projector.material.SetTexture("Base_Map", bookFormats[bookIndex]);
+            bookFormatName.text = bookFormatsNames[bookIndex];
         }
         
         public void ShowNextFormat()
         {
-            if (sceneIndex == _sceneCount - 1)
+            if (bookIndex == _bookCount - 1)
             {
-                sceneIndex = 0;
+                bookIndex = 0;
             }
             else
             {
-                sceneIndex++;
+                bookIndex++;
             }
-            //sceneIndex = sceneIndex == _sceneCount - 1 ? 0 : sceneIndex++;
             ShowBookFormat();
         }
         
