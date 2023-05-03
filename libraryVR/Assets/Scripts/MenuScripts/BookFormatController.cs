@@ -14,6 +14,7 @@ namespace MenuScripts
         
         public DecalProjector projector;
         public TMP_Text bookFormatName;
+        public TMP_Text bookFormatNumber;
 
         private int _bookCount;
         [HideInInspector] public int bookIndex;
@@ -26,10 +27,17 @@ namespace MenuScripts
             ShowBookFormat();
         }
 
+        private void ShowBookFormatNumber()
+        {
+            string text = (bookIndex+1) + " / " + _bookCount;
+            bookFormatNumber.text = text;
+        }
+
         private void ShowBookFormat()
         {
             projector.material.SetTexture("Base_Map", bookFormats[bookIndex]);
             bookFormatName.text = bookFormatsNames[bookIndex];
+            ShowBookFormatNumber();
         }
         
         public void ShowNextFormat()

@@ -12,6 +12,7 @@ namespace MenuScripts
 
         public DecalProjector projector;
         public TMP_Text roomFormatName;
+        public TMP_Text roomFormatNumber;
 
         private int _roomCount;
         [HideInInspector] public int roomIndex;
@@ -24,11 +25,19 @@ namespace MenuScripts
 
             ShowRoomFormat();
         }
+        
+        private void ShowRoomFormatNumber()
+        {
+            string text = (roomIndex+1) + " / " + _roomCount;
+            roomFormatNumber.text = text;
+        }
 
         private void ShowRoomFormat()
         {
             projector.material.SetTexture("Base_Map", roomFormats[roomIndex]);
             roomFormatName.text = roomFormatsNames[roomIndex];
+
+            ShowRoomFormatNumber();
         }
 
         public void ShowNextFormat()
