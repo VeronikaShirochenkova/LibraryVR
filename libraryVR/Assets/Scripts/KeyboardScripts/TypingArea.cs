@@ -17,16 +17,20 @@ namespace KeyboardScripts
         public GameObject typingHandLeft;
         public GameObject typingHandRight;
 
+        [Header("Other")] 
+        public GameObject marker;
+
         private bool _resetLeftHand;
         private bool _resetRightHand;
 
         private void Start()
         {
-            _resetLeftHand = false;
-            _resetRightHand = false;
+            _resetLeftHand = true;
+            _resetRightHand = true;
         }
 
-        private void Update()
+        
+        public void CheckVisibility()
         {
             if (!transform.gameObject.activeSelf)
             {
@@ -71,19 +75,11 @@ namespace KeyboardScripts
             {
                 ResetHandVisibility("LeftHand" , true);
                 _resetLeftHand = false;
-                //leftTypingSphere.SetActive(true);
-
-                //baseHandLeft.SetActive(false);
-                //typingHandLeft.SetActive(true);
             }
-            else if (other.CompareTag("RightHand"))
+            else if (other.CompareTag("RightHand") && !marker.activeSelf)
             {
                 ResetHandVisibility("RightHand" , true);
                 _resetRightHand = false;
-                //rightTypingSphere.SetActive(true);
-
-                //baseHandRight.SetActive(false);
-                //typingHandRight.SetActive(true);
             }
         }
 
@@ -96,19 +92,11 @@ namespace KeyboardScripts
             {
                 ResetHandVisibility("LeftHand" , false);
                 _resetLeftHand = true;
-                //leftTypingSphere.SetActive(false);
-
-                //baseHandLeft.SetActive(true);
-                //typingHandLeft.SetActive(false);
             }
-            else if (other.CompareTag("RightHand"))
+            else if (other.CompareTag("RightHand") && !marker.activeSelf)
             {
                 ResetHandVisibility("RightHand" , false);
                 _resetRightHand = true;
-                //rightTypingSphere.SetActive(false);
-
-                //baseHandRight.SetActive(true);
-                //typingHandRight.SetActive(false);
             }
         }
     }

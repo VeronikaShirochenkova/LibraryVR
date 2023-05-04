@@ -22,8 +22,8 @@ namespace KeyboardScripts
 
     
         /**
-     * insert character to the end of string in search box;
-     */
+        * insert character to the end of string in search box;
+        */
         public void InsertChar(string s)
         {
             if (inputField.text.Length == 0)
@@ -36,8 +36,8 @@ namespace KeyboardScripts
     
 
         /**
-     * delete last character to the end of string in search box;
-     */
+        * delete last character to the end of string in search box;
+        */
         public void DeleteChar()
         {
             if (inputField.text.Length > 0)
@@ -49,8 +49,8 @@ namespace KeyboardScripts
     
     
         /**
-     * insert " " character to the end of string in search box;
-     */
+        * insert " " character to the end of string in search box;
+        */
         public void InsertSpace()
         {
             inputField.text += " ";
@@ -59,8 +59,8 @@ namespace KeyboardScripts
     
     
         /**
-     * update position of caret in search box;
-     */
+        * update position of caret in search box;
+        */
         private void ResetCaretPos()
         {
             inputField.caretPosition = inputField.text.Length;

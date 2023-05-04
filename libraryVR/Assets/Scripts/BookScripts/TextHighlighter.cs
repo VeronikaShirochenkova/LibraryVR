@@ -212,7 +212,8 @@ namespace BookScripts
                         }
 
                         // if char is a letter or punctuation mark and char isn't highlighted yet
-                        if (char.IsLetterOrDigit(cInfo.character) && displayedPage.textInfo.meshInfo[cInfo.materialReferenceIndex].colors32[cInfo.vertexIndex] != _color)
+                        if ((char.IsLetterOrDigit(cInfo.character) || char.IsPunctuation(cInfo.character)) && 
+                            displayedPage.textInfo.meshInfo[cInfo.materialReferenceIndex].colors32[cInfo.vertexIndex] != _color)
                         {
                             
                             // find all chars in this word
@@ -324,7 +325,7 @@ namespace BookScripts
             _head = charIdx;
             _tail = charIdx;
 
-            if (!char.IsLetterOrDigit(ch.character))
+            if (!char.IsLetterOrDigit(ch.character) &&  !char.IsPunctuation(ch.character))
             {
                 _head = -1;
                 _tail = -1;
@@ -334,14 +335,16 @@ namespace BookScripts
             // find head
             for (var i = charIdx; i >= start; i--)
             {
-                if (!char.IsLetterOrDigit(displayedPage.textInfo.characterInfo[i].character)) break;
+                if (!char.IsLetterOrDigit(displayedPage.textInfo.characterInfo[i].character) &&
+                    !char.IsPunctuation(displayedPage.textInfo.characterInfo[i].character)) break;
                 _head = i;
             }
         
             // find tail 
             for (var i = charIdx; i <= end; i++)
             {
-                if (!char.IsLetterOrDigit(displayedPage.textInfo.characterInfo[i].character)) break;
+                if (!char.IsLetterOrDigit(displayedPage.textInfo.characterInfo[i].character) &&
+                    !char.IsPunctuation(displayedPage.textInfo.characterInfo[i].character)) break;
                 _tail = i;
             }
         }

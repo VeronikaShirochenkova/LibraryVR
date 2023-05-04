@@ -81,6 +81,7 @@ namespace MenuScripts
         */
         public void ChangeDisplayedBook(int change)
         {
+            if (_currentIndex < 0) return;
             _currentIndex += change;
         
             // if it's first/last book -> change index correctly
