@@ -54,6 +54,7 @@ namespace BookScripts
         public GameObject noteButtonParent;
         public GameObject notePrevButton;
         public GameObject noteNextButton;
+        public AudioSource sound;
         private int _allNotesPageCount;
         private int _allNotesCurrPage;
         private List<GameObject> _buttonNotes;
@@ -101,7 +102,7 @@ namespace BookScripts
             // Notes
             words = new List<(int, int)>();
             selectedNote = "";
-            _tagStart = "<font=\"Brass Mono SDF\"><mark=#767EE190>";
+            _tagStart = "<font=\"Brass Mono\"><mark=#767EE190>";
             _tagEnd = "</mark>";
             
 
@@ -315,7 +316,7 @@ namespace BookScripts
                 SetPrevPages();
             }
             
-            ShowAllNotesOnPage();
+            ShowAllNotesInChapter();
             ShowPageNumber();
         }
 
@@ -454,11 +455,12 @@ namespace BookScripts
             {
                 foreach (var note in _userData.notes[i].notes)
                 {
-                    var newButton = Instantiate(noteButtonPrefab, noteButtonParent.transform);
                     int chap = i;
-                    newButton.GetComponentInChildren<TMP_Text>().text = stringChapters[chap].title.TrimEnd() + ": " + note.highlightText;
                     
+                    var newButton = Instantiate(noteButtonPrefab, noteButtonParent.transform);
+                    newButton.GetComponent<HighlightedButtonController>().CreateButton(note, stringChapters[chap].title.TrimEnd());
                     newButton.GetComponent<Button>().onClick.AddListener(() => ShowPageWithSelectedNote(note, chap));
+                    
                     _buttonNotes.Add(newButton);
                 }
             }
@@ -469,19 +471,19 @@ namespace BookScripts
 
         private void SetAllNotesPages()
         {
-            if (_buttonNotes.Count > 10)
+            if (_buttonNotes.Count > 4)
             {
-                _allNotesPageCount = (_buttonNotes.Count % 10 == 0) ? _buttonNotes.Count / 10 : (_buttonNotes.Count / 10) + 1;
+                _allNotesPageCount = (_buttonNotes.Count % 4 == 0) ? _buttonNotes.Count / 4 : (_buttonNotes.Count / 4) + 1;
             
-                notePrevButton.SetActive(true);
+                //notePrevButton.SetActive(true);
                 noteNextButton.SetActive(true);
 
-                for (int i = 0; i <= 10; i++)
+                for (int i = 0; i < 4; i++)
                 {
                     _buttonNotes[i].SetActive(true);
                 }
 
-                for (int i = 10; i < _buttonNotes.Count; i++)
+                for (int i = 4; i < _buttonNotes.Count; i++)
                 {
                     _buttonNotes[i].SetActive(false);
                 }
@@ -504,9 +506,13 @@ namespace BookScripts
          */
         public void ShowNextPageHighlighted()
         {
-            if(_allNotesCurrPage == _allNotesPageCount-1) return;
+            if (_allNotesCurrPage == _allNotesPageCount - 1) return;
+
+            sound.Play();
             ChangeVisible();
+            if (_allNotesCurrPage == 0) notePrevButton.SetActive(true);
             _allNotesCurrPage++;
+            if (_allNotesCurrPage == _allNotesPageCount - 1) noteNextButton.SetActive(false);
             ChangeVisible();
         }
         
@@ -515,16 +521,20 @@ namespace BookScripts
          */
         public void ShowPreviousPageHighlighted()
         {
-            if(_allNotesCurrPage == 0) return;
+            if (_allNotesCurrPage == 0) return;
+            
+            sound.Play();
             ChangeVisible();
+            if (_allNotesCurrPage == _allNotesPageCount - 1) noteNextButton.SetActive(true);
             _allNotesCurrPage--;
+            if (_allNotesCurrPage == 0) notePrevButton.SetActive(false);
             ChangeVisible();
         }
         
         private void ChangeVisible()
         {
-            int start = _allNotesCurrPage * 10;
-            int end = (start+10 > _buttonNotes.Count) ? _buttonNotes.Count : start+10;
+            int start = _allNotesCurrPage * 4;
+            int end = (start+4 > _buttonNotes.Count) ? _buttonNotes.Count : start+4;
         
             for (int i = start; i < end; i++)
             {
@@ -537,10 +547,11 @@ namespace BookScripts
          */
         private void AddNewNoteToNotePage(Note note)
         {
-            var needReset = _buttonNotes.Count == 10;
+            var needReset = _buttonNotes.Count == 4;
             var newButton = Instantiate(noteButtonPrefab, noteButtonParent.transform);
             int chap = currentChapter;
-            newButton.GetComponentInChildren<TMP_Text>().text = stringChapters[chap].title.TrimEnd() + ": " + note.highlightText;
+            newButton.GetComponent<HighlightedButtonController>().CreateButton(note, stringChapters[chap].title.TrimEnd());
+            //newButton.GetComponentInChildren<TMP_Text>().text = stringChapters[chap].title.TrimEnd() + ": " + note.highlightText;
             
             newButton.GetComponent<Button>().onClick.AddListener(() => ShowPageWithSelectedNote(note, chap));
             _buttonNotes.Add(newButton);
@@ -557,7 +568,7 @@ namespace BookScripts
                     int count = _buttonNotes.Count;
                     Destroy(b);
                     _buttonNotes.Remove(b);
-                    if (count == 11) {SetAllNotesPages();}
+                    if (count == 5) {SetAllNotesPages();}
                     break;
                 }
             }
@@ -630,7 +641,7 @@ namespace BookScripts
         /**
          * Show all notes on the open page
          */
-        public void ShowAllNotesOnPage()
+        public void ShowAllNotesInChapter()
         {
             // if chapter doesn't have notes
             if (_userData.notes[currentChapter].notes.Count == 0) return;
@@ -672,7 +683,8 @@ namespace BookScripts
             var inputNote = notePaper.GetComponentInChildren<TMP_InputField>();
 
             // Save new note and change its color
-            Note note = new Note(oldText, inputNote.text);
+            string date = DateTime.UtcNow.GetDateTimeFormats('d')[0];
+            Note note = new Note(oldText, inputNote.text, date);
             _userData.SaveNewNote(note, currentChapter);
             AddNewNoteToNotePage(note);
 

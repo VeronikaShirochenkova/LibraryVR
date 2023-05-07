@@ -35,6 +35,8 @@ namespace BookScripts
         [SerializeField] private GameObject noteRetellingButton;
         private MoveObject _retellingButton;
 
+        public AudioSource sound;
+
         public GameObject noteText;
     
         // User data
@@ -55,7 +57,7 @@ namespace BookScripts
             _head = -1;
             _tail = -1;
             _color = new Color32(0, 105, 203, 255);
-            _tagsRegex = new Regex(@"<font=""Brass Mono SDF""><mark=#767EE190>(.*?)<\/mark>", RegexOptions.Singleline);
+            _tagsRegex = new Regex(@"<font=""Brass Mono""><mark=#767EE190>(.*?)<\/mark>", RegexOptions.Singleline);
 
             // cause in 1st frame it's null
             displayedPage.ForceMeshUpdate();
@@ -91,7 +93,6 @@ namespace BookScripts
                 }
                 
             }
-            
         }
 
         /**
@@ -254,6 +255,11 @@ namespace BookScripts
                             {
                                 noteRetellingButton.SetActive(true);
                                 _retellingButton.MoveObjectOnClick();
+                                if (sound)
+                                {
+                                    sound.Play();
+                                }
+                                
                             }
                             
                         
@@ -288,6 +294,7 @@ namespace BookScripts
                     textDisplay.ShowTextToSelectedNote();
                     noteDeleteButton.SetActive(true);
                     _deleteButton.MoveObjectOnClick();
+                    if (!_deleteButton.isMovingFromStart) noteText.SetActive(false);
                     
                     return true;
                 }

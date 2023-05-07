@@ -18,6 +18,7 @@ namespace BookScripts
         [Header("Table of content Tools")]
         public GameObject previousButton;
         public GameObject nextButton;
+        public AudioSource sound;
         
         
         private List<string> _tableOfContent;
@@ -45,15 +46,20 @@ namespace BookScripts
             _currentPage = 0;
             SetPages();
         }
-    
+        
+
         /**
          * Show the next part of the chapter buttons in table of content
          */
         public void ShowNextPage()
         {
-            if(_currentPage == _pageCount-1) return;
+            if(_currentPage == _pageCount - 1) return;
+            
+            sound.Play();
             ChangeVisible();
+            if (_currentPage == 0) previousButton.SetActive(true);
             _currentPage++;
+            if (_currentPage == _pageCount - 1) nextButton.SetActive(false);
             ChangeVisible();
         }
         
@@ -63,8 +69,12 @@ namespace BookScripts
         public void ShowPreviousPage()
         {
             if(_currentPage == 0) return;
+            
+            sound.Play();
             ChangeVisible();
+            if (_currentPage == _pageCount - 1) nextButton.SetActive(true);
             _currentPage--;
+            if (_currentPage == 0) previousButton.SetActive(false);
             ChangeVisible();
         }
         
@@ -79,7 +89,7 @@ namespace BookScripts
             {
                 _pageCount = (_buttons.Count % 10 == 0) ? _pageCount : _pageCount + 1;
             
-                previousButton.SetActive(true);
+                //previousButton.SetActive(true);
                 nextButton.SetActive(true);
             
                 for (int i = 10; i < _buttons.Count; i++)

@@ -15,7 +15,7 @@ namespace BookScripts
         
         private Vector3 _startPosition;
         private Vector3 offset;
-        private bool isMovingFromStart = false;      // Флаг для определения направления перемещения
+        public bool isMovingFromStart = false;      // Флаг для определения направления перемещения
         private bool isMoving = false;          // Флаг для определения, находится ли объект в движении
     
 

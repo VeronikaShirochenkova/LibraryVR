@@ -386,7 +386,8 @@ namespace ScrollTextScripts
             var inputNote = notePaper.GetComponentInChildren<TMP_InputField>();
 
             // Save new note and change its color
-            Note note = new Note(oldText, inputNote.text);
+            string date = DateTime.UtcNow.GetDateTimeFormats('d')[0];
+            Note note = new Note(oldText, inputNote.text, date);
             _userData.SaveNewNote(note, currentChapter);
             AddNewNoteToNotePage(note);
 

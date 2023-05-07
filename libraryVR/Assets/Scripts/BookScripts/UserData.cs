@@ -117,11 +117,13 @@ namespace BookScripts
     {
         public string highlightText;
         public string note;
+        public string date;
 
-        public Note(string text, string note)
+        public Note(string text, string note, string date)
         {
             highlightText = text;
             this.note = note;
+            this.date = date;
         }
     }
     

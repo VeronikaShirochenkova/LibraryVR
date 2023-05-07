@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using TMPro;
 using UnityEngine;
+using UnityEngine.UI;
 
 namespace BookScripts
 {
@@ -11,13 +12,16 @@ namespace BookScripts
         [SerializeField] private TMP_Text rightPage;
         [SerializeField] private TMP_Text leftPageNumber;
         [SerializeField] private TMP_Text rightPageNumber;
-        [SerializeField] private Material material;
+        [SerializeField] private List<GameObject> meshes;
+        [SerializeField] private List<GameObject> frames;
 
-        
+
         private List<(Color, Color)> _assets;
+        
 
         void Start()
         {
+            frames[0].SetActive(true);
 
             //Color pageColor1 = new Color(0.243f, 0.234f, 0.223f);
             Color pageColor1 = new Color(0.95f, 0.92f, 0.87f);
@@ -44,7 +48,11 @@ namespace BookScripts
 
         public void ChangeAppearance(int index)
         {
-            material.color = _assets[index].Item1;
+            foreach (var mesh in meshes)
+            {
+                mesh.GetComponent<MeshRenderer>().material.color = _assets[index].Item1;
+            }
+            
 
             if (leftPage)
             {
@@ -65,7 +73,11 @@ namespace BookScripts
             {
                 rightPageNumber.color = _assets[index].Item2;
             }
-            
+
+            for (int i = 0; i < frames.Count; i++)
+            {
+                frames[i].SetActive(i == index);
+            }
         }
     }
 }
