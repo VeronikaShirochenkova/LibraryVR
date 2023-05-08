@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using UnityEngine;
 using UnityEngine.Serialization;
 
@@ -84,11 +85,20 @@ namespace BookScripts
             notes[chapNumber].notes.Add(note);
         }
 
-        public void DeleteExistingNote(string note, int chapNumber)
+        public void UpdateExistingNote(string highlightedText, string newNote, int chapNumber)
+        {
+            foreach (var t in notes[chapNumber].notes.Where(t => t.highlightText == highlightedText))
+            {
+                t.note = newNote;
+                break;
+            }
+        }
+
+        public void DeleteExistingNote(string text, int chapNumber)
         {
             foreach (var n in notes[chapNumber].notes)
             {
-                if (n.highlightText == note)
+                if (n.highlightText == text)
                 {
                     notes[chapNumber].notes.Remove(n);
                     break;

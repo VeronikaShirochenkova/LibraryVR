@@ -66,10 +66,13 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: Text of note which will be shown fgfggfgfgf gfgf fgf fgf fgfgf fg f
+  m_text: 'Chapter 1:
+
+    Text of note which will be shown fgfggfgfgf gfgf fgf fgf
+    fgfgf fg f'
   m_isRightToLeft: 0
-  m_fontAsset: {fileID: 11400000, guid: 3b00057367351aa4182f93de7f53fb70, type: 2}
-  m_sharedMaterial: {fileID: 3414027331772544360, guid: 3b00057367351aa4182f93de7f53fb70,
+  m_fontAsset: {fileID: 11400000, guid: aea233912ebbd5a488559294d69e3160, type: 2}
+  m_sharedMaterial: {fileID: -8643984773090430305, guid: aea233912ebbd5a488559294d69e3160,
     type: 2}
   m_fontSharedMaterials: []
   m_fontMaterial: {fileID: 0}
@@ -173,8 +176,8 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: 0, y: -0.598}
-  m_SizeDelta: {x: 250, y: 13.8}
+  m_AnchoredPosition: {x: 0, y: 2.9984}
+  m_SizeDelta: {x: 250, y: 20}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!222 &304409624613425574
 CanvasRenderer:
@@ -257,4 +260,4 @@ MonoBehaviour:
   m_FillClockwise: 1
   m_FillOrigin: 0
   m_UseSpriteMesh: 0
-  m_PixelsPerUnitMultiplier: 1
+  m_PixelsPerUnitMultiplier: 1.5

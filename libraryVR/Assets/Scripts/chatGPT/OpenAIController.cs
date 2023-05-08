@@ -10,6 +10,7 @@ namespace chatGPT
     public class OpenAIController : MonoBehaviour
     {
         public TMP_Text textBox;
+        private string _waitingText;
         
         private List<ChatMessage> messages;
 
@@ -20,6 +21,8 @@ namespace chatGPT
         {
             api = new OpenAIAPI(key);
             StartConversation();
+            _waitingText = "Waiting for a response...";
+            textBox.text = _waitingText;
         }
 
         private void StartConversation()
@@ -31,6 +34,7 @@ namespace chatGPT
         public async void GetResponse(string text)
         {
             if (text.Length < 1) return;
+            textBox.text = _waitingText;
 
             ChatMessage userMessage = new ChatMessage(ChatMessageRole.User, text);
 

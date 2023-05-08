@@ -35,6 +35,15 @@ namespace BookScripts
         [SerializeField] private GameObject noteRetellingButton;
         private MoveObject _retellingButton;
 
+        [SerializeField] private TMP_InputField textToNote;
+
+        [Header("Keyboard and Papers")] 
+        [SerializeField] private GameObject keyboard;
+        [SerializeField] private GameObject paperText;
+        [SerializeField] private GameObject paperInput;
+        
+        
+
         public AudioSource sound;
 
         public GameObject noteText;
@@ -138,14 +147,32 @@ namespace BookScripts
                     {
                         if (ClickOnNote(cInfo))
                         {
+                            //if (!noteWriteButton.activeSelf)
+                            //{
+                            
+                                noteWriteButton.SetActive(true);
+                                _writeButton.MoveObjectOnClick();
+                                
+                                // update input field
+                                textDisplay.PaperTextUpdate();
+                                
+                                noteSaveButton.SetActive(true);
+                                _saveButton.MoveObjectOnClick();
+                            //}
+
                             break;
                         }
 
                         if (noteDeleteButton.activeSelf)
                         {
                             textDisplay.selectedNote = "";
-                            //noteDeleteButton.SetActive(false);
+                            
                             _deleteButton.MoveObjectOnClick();
+                            _writeButton.MoveObjectOnClick();
+                            _saveButton.MoveObjectOnClick();
+                            
+                            PaperAndKeyboardDeactivate();
+                            
                             textDisplay.ShowTextToSelectedNote();
                         }
                         break;
@@ -159,12 +186,24 @@ namespace BookScripts
                 if (noteDeleteButton.activeSelf)
                 {
                     textDisplay.selectedNote = "";
-                    //noteDeleteButton.SetActive(false);
+                    
                     _deleteButton.MoveObjectOnClick();
+                    _writeButton.MoveObjectOnClick();
+                    _saveButton.MoveObjectOnClick();
+
+                    PaperAndKeyboardDeactivate();
+
                     textDisplay.ShowTextToSelectedNote();
                 }
             }
             
+        }
+
+        private void PaperAndKeyboardDeactivate()
+        {
+            keyboard.SetActive(false);
+            paperText.SetActive(false);
+            paperInput.SetActive(false);
         }
         
 
@@ -292,8 +331,10 @@ namespace BookScripts
                     }
                     textDisplay.selectedNote = displayedPage.text.Substring(startIndex, endIndex - startIndex + 1);
                     textDisplay.ShowTextToSelectedNote();
+                    
                     noteDeleteButton.SetActive(true);
                     _deleteButton.MoveObjectOnClick();
+
                     if (!_deleteButton.isMovingFromStart) noteText.SetActive(false);
                     
                     return true;

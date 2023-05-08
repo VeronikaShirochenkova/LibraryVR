@@ -16,6 +16,10 @@ namespace BookScripts
             date.text = note.date.Replace("-"," / ");
             noteIndicator.SetActive(note.note.Length > 0);
         }
-        
+
+        public void SetNoteIndicator(bool value)
+        {
+            noteIndicator.SetActive(value);
+        }
     }
 }
