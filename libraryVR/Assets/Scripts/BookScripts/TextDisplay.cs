@@ -6,6 +6,7 @@ using UnityEngine;
 using UnityEngine.UI;
 using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 using UnityEngine.Formats.Alembic.Importer;
 using UnityEngine.Serialization;
 
@@ -192,12 +193,10 @@ namespace BookScripts
                 noMatchFound.SetActive(true);
                 return;
             }
-            else
-            {
-                noMatchFound.SetActive(false);
-            }
-            
-            
+
+            noMatchFound.SetActive(false);
+
+
             List<List<string>> allSentences = new List<List<string>>();
 
             for (int i = 0; i < _userData.chaptersCount; i++)
@@ -221,7 +220,11 @@ namespace BookScripts
         private void ShowSearchResults(List<List<string>> allSentences)
         {
             DestroySearchResults();
-            
+            if (allSentences.All(lst => lst.Count == 0))
+            {
+                noMatchFound.SetActive(true);
+                return;
+            }
             for (int i = 0; i < _userData.chaptersCount; i++)
             {
                 if (allSentences[i].Count == 0) continue;
@@ -732,8 +735,8 @@ namespace BookScripts
             else
             {
                 var start = words[0].Item1;
-                
                 var end = words[0].Item2;
+                
                 foreach (var word in words)
                 {
                     start = (word.Item1 < start) ? word.Item1 : start;
@@ -767,7 +770,6 @@ namespace BookScripts
             noteWriteButton.GetComponent<MoveObject>().MoveObjectOnClick();
             
             
-            Debug.Log("deact");
             // deactivate keyboard
             noteKeyboard.SetActive(false);
             

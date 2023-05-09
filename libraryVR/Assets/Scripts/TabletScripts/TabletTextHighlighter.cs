@@ -30,6 +30,11 @@ namespace TabletScripts
         [SerializeField] private GameObject noteDeleteButton;               // delete existing note
         [SerializeField] private GameObject noteRetellingButton;
         
+        [Header("Keyboard and Papers")] 
+        [SerializeField] private GameObject keyboard;
+        [SerializeField] private GameObject paperText;
+        [SerializeField] private GameObject paperInput;
+        
         // User data
         private UserData _userData;
 
@@ -49,7 +54,7 @@ namespace TabletScripts
             _head = -1;
             _tail = -1;
             _color = new Color32(0, 105, 203, 255);
-            _tagsRegex = new Regex(@"<font=""Brass Mono SDF""><mark=#767EE190>(.*?)<\/mark>", RegexOptions.Singleline);
+            _tagsRegex = new Regex(@"<font=""Brass Mono""><mark=#767EE190>(.*?)<\/mark>", RegexOptions.Singleline);
 
             // cause in 1st frame it's null
             displayedPage.ForceMeshUpdate();
@@ -124,13 +129,27 @@ namespace TabletScripts
                     {
                         if (ClickOnNote(cInfo))
                         {
+                            // update input field
+                            noteWriteButton.SetActive(true);
+
+                            // update input field
+                            textDisplay.PaperTextUpdate();
+                                
+                            noteSaveButton.SetActive(true);
                             break;
                         }
 
                         if (noteDeleteButton.activeSelf)
                         {
                             textDisplay.selectedNote = "";
+                            
                             noteDeleteButton.SetActive(false);
+                            noteWriteButton.SetActive(false);
+                            noteSaveButton.SetActive(false);
+                            
+                            PaperAndKeyboardDeactivate();
+                            
+                            textDisplay.ShowTextToSelectedNote();
                         }
                         break;
                     }
@@ -143,10 +162,24 @@ namespace TabletScripts
                 if (noteDeleteButton.activeSelf)
                 {
                     textDisplay.selectedNote = "";
+                    
                     noteDeleteButton.SetActive(false);
+                    noteWriteButton.SetActive(false);
+                    noteSaveButton.SetActive(false);
+                    
+                    PaperAndKeyboardDeactivate();
+
+                    textDisplay.ShowTextToSelectedNote();
                 }
             }
             
+        }
+        
+        private void PaperAndKeyboardDeactivate()
+        {
+            keyboard.SetActive(false);
+            paperText.SetActive(false);
+            paperInput.SetActive(false);
         }
         
         /**
@@ -166,7 +199,12 @@ namespace TabletScripts
                         return true;
                     }
                     textDisplay.selectedNote = displayedPage.text.Substring(startIndex, endIndex - startIndex + 1);
+                    textDisplay.ShowTextToSelectedNote();
+                    
                     noteDeleteButton.SetActive(true);
+                    noteWriteButton.SetActive(true);
+                    noteSaveButton.SetActive(true);
+                    
                     return true;
                 }
             }

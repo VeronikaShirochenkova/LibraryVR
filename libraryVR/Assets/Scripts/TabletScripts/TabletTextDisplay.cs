@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using BookScripts;
 using chatGPT;
 using TMPro;
@@ -26,9 +27,12 @@ namespace TabletScripts
         [SerializeField] private GameObject noteCancelButton;
         [SerializeField] private GameObject noteWriteButton;
 
-        [SerializeField] private GameObject noteWriteTools;
+        //[SerializeField] private GameObject noteWriteTools;
         [SerializeField] private GameObject notePaper;
+        private TMP_InputField notePaperInputField;
         [SerializeField] private GameObject noteKeyboard;
+        [SerializeField] private GameObject textToNotePaper;
+        private TMP_Text _textToNote;
         
         [SerializeField] private GameObject noteDeleteButton;               // delete existing selected note
         [SerializeField] private GameObject noteRetellingButton;
@@ -43,6 +47,7 @@ namespace TabletScripts
         [SerializeField] private TMP_InputField searchInputField;
         public GameObject searchResultButtonPrefab;
         public GameObject searchResultButtonParent;
+        public GameObject noMatchFound;
         private List<GameObject> _buttonSearchResults;
         public GameObject search;
         
@@ -76,7 +81,7 @@ namespace TabletScripts
             // Notes
             words = new List<(int, int)>();
             selectedNote = "";
-            _tagStart = "<font=\"Brass Mono SDF\"><mark=#767EE190>";
+            _tagStart = "<font=\"Brass Mono\"><mark=#767EE190>";
             _tagEnd = "</mark>";
             
             //JSON
@@ -93,15 +98,22 @@ namespace TabletScripts
             SetChapter(_userData.chapterBookmarkTablet, false);
             SetPage(_userData.pageBookmarkTablet);
             
+            // add all highlighted notes to page with them
             AddAllNotesToNotePage();
             
             // search
             _buttonSearchResults = new List<GameObject>();
 
-            noteWriteTools.SetActive(false);
+
+            noteKeyboard.SetActive(false);
+            notePaper.SetActive(false);
+            _textToNote = textToNotePaper.GetComponentInChildren<TMP_Text>();
+            textToNotePaper.SetActive(false);
 
             settingsObject.SetActive(true);
             TOC.SetActive(true);
+            
+            notePaperInputField = notePaper.GetComponentInChildren<TMP_InputField>();
         }
         
         //=================== TABLE OF CONTENT ========================
@@ -268,11 +280,13 @@ namespace TabletScripts
             {
                 foreach (var note in _userData.notes[i].notes)
                 {
-                    var newButton = Instantiate(noteButtonPrefab, noteButtonParent.transform);
                     int chap = i;
-                    newButton.GetComponentInChildren<TMP_Text>().text = stringChapters[chap].title.TrimEnd() + ": " + note.highlightText;
                     
+                    var newButton = Instantiate(noteButtonPrefab, noteButtonParent.transform);
+                    //newButton.GetComponentInChildren<TMP_Text>().text = stringChapters[chap].title.TrimEnd() + ": " + note.highlightText;
+                    newButton.GetComponent<HighlightedButtonController>().CreateButton(note, stringChapters[chap].title.TrimEnd());
                     newButton.GetComponent<Button>().onClick.AddListener(() => ShowPageWithSelectedNote(note, chap));
+                    
                     _buttonNotes.Add(newButton);
                 }
             }
@@ -287,7 +301,8 @@ namespace TabletScripts
         {
             var newButton = Instantiate(noteButtonPrefab, noteButtonParent.transform);
             int chap = currentChapter;
-            newButton.GetComponentInChildren<TMP_Text>().text = stringChapters[chap].title.TrimEnd() + ": " + note.highlightText;
+            newButton.GetComponent<HighlightedButtonController>().CreateButton(note, stringChapters[chap].title.TrimEnd());
+            //newButton.GetComponentInChildren<TMP_Text>().text = stringChapters[chap].title.TrimEnd() + ": " + note.highlightText;
             
             newButton.GetComponent<Button>().onClick.AddListener(() => ShowPageWithSelectedNote(note, chap));
             _buttonNotes.Add(newButton);
@@ -319,6 +334,13 @@ namespace TabletScripts
             
             noteDeleteButton.SetActive(false);
             DeleteNoteFormNotePage(clearNote);
+            
+            noteSaveButton.SetActive(false);
+            noteWriteButton.SetActive(false);
+            
+            noteKeyboard.SetActive(false);
+            notePaperInputField.text = "";
+            notePaper.SetActive(false);
         }
         
         /**
@@ -335,6 +357,7 @@ namespace TabletScripts
             tabletPage.pageToDisplay = _currentPage;
 
             ShowPageNumber();
+            highlightedWindow.SetActive(false);
         }
         
         public void ShowAllNotesOnPage()
@@ -353,41 +376,71 @@ namespace TabletScripts
             tabletPage.text = left;
         }
         
+        private void UpdateNoteButtonInfo(string text, bool note)
+        {
+            foreach (var b in _buttonNotes)
+            {
+                if (b.GetComponentInChildren<TMP_Text>().text.Contains(text))
+                {
+                    b.GetComponent<HighlightedButtonController>().SetNoteIndicator(note);
+                    break;
+                }
+            }
+        }
         public void SaveNoteOnPage()
         {
-            var start = words[0].Item1;
-            var end = words[0].Item2;
-            
-            foreach (var word in words)
-            {
-                start = (word.Item1 < start) ? word.Item1 : start;
-                end = (word.Item2 > end) ? word.Item2 : end;
-            }
-
-            string oldText = tabletPage.text.Substring(start, end - start + 1);
-            
-            tabletPage.text = tabletPage.text.Replace(oldText, _tagStart + oldText + _tagEnd);
-
-            words.Clear();
-            
-            var inputNote = notePaper.GetComponentInChildren<TMP_InputField>();
-
-            // Save new note and change its color
+            var inputNote = notePaperInputField.text;
             string date = DateTime.UtcNow.GetDateTimeFormats('d')[0];
-            Note note = new Note(oldText, inputNote.text, date);
-            _userData.SaveNewNote(note, currentChapter);
-            AddNewNoteToNotePage(note);
 
+            if (selectedNote.Length != 0)
+            {
+                string clearNote = selectedNote.Replace(_tagStart, "").Replace(_tagEnd, "");
+                _userData.UpdateExistingNote(clearNote, inputNote, currentChapter);
+                UpdateNoteButtonInfo(clearNote, inputNote.Length != 0);
+                selectedNote = "";
+                ShowTextToSelectedNote();
+                noteDeleteButton.SetActive(false);
+            }
+            else
+            {
+                var start = words[0].Item1;
+                var end = words[0].Item2;
+                
+                foreach (var word in words)
+                {
+                    start = (word.Item1 < start) ? word.Item1 : start;
+                    end = (word.Item2 > end) ? word.Item2 : end;
+                }
+                
+                string oldText = tabletPage.text.Substring(start, end - start + 1);
+                tabletPage.text = tabletPage.text.Replace(oldText, _tagStart + oldText + _tagEnd);
+                words.Clear();
+                
+                Note note = new Note(oldText, inputNote, date);
+                _userData.SaveNewNote(note, currentChapter);
+                AddNewNoteToNotePage(note);
+                
+                // deactivate "Cancel note" button
+                noteCancelButton.SetActive(false);
+                
+                // deactivate "retelling" button
+                noteRetellingButton.SetActive(false);
+            }
+            
             // deactivate "Save note" button
             noteSaveButton.SetActive(false);
-            // deactivate "Cancel note" button
-            noteCancelButton.SetActive(false);
+            
             // deactivate "Write mark" button
             noteWriteButton.SetActive(false);
-            // deactivate "retelling" button
-            noteRetellingButton.SetActive(false);
+            
 
-            noteWriteTools.SetActive(false);
+            //noteWriteTools.SetActive(false);
+            noteKeyboard.SetActive(false);
+            notePaperInputField.text = "";
+            notePaper.SetActive(false);
+            selectedNote = "";
+            //textToNotePaper.SetActive(false);
+            
             //// deactivate keyboard
             //noteKeyboard.SetActive(false);
             //// deactivate input field
@@ -422,7 +475,11 @@ namespace TabletScripts
             // deactivate "retelling" button
             noteRetellingButton.SetActive(false);
             
-            noteWriteTools.SetActive(false);
+            //noteWriteTools.SetActive(false);
+            noteKeyboard.SetActive(false);
+            notePaper.SetActive(false);
+            textToNotePaper.SetActive(false);
+            
             //// deactivate keyboard
             //noteKeyboard.SetActive(false);
             //// deactivate input field
@@ -449,7 +506,12 @@ namespace TabletScripts
             // deactivate "retelling" button
             noteRetellingButton.SetActive(false);
             
-            noteWriteTools.SetActive(false);
+            //noteWriteTools.SetActive(false);
+            noteKeyboard.SetActive(false);
+            notePaper.SetActive(false);
+            textToNotePaper.SetActive(false);
+            
+            
             // // deactivate keyboard
             // noteKeyboard.SetActive(false);
             // // deactivate input field
@@ -462,45 +524,117 @@ namespace TabletScripts
         
         public void KeyboardAndNotePaperVisibility()
         {
+            // if (notePaper.activeSelf)
+            // {
+            //     notePaper.GetComponentInChildren<TMP_InputField>().text = "";
+            // }
+            // noteWriteTools.SetActive(!noteWriteTools.activeSelf);
+            noteKeyboard.SetActive(!noteKeyboard.activeSelf);
+
             if (notePaper.activeSelf)
             {
-                notePaper.GetComponentInChildren<TMP_InputField>().text = "";
+                if (selectedNote.Length != 0)
+                {
+                    notePaper.GetComponentInChildren<TMP_InputField>().text = "";
+                }
+                notePaper.SetActive(false);
+                if (textToNotePaper.GetComponentInChildren<TMP_Text>().text.Length != 0)
+                {
+                    textToNotePaper.SetActive(true);
+                }
             }
-            noteWriteTools.SetActive(!noteWriteTools.activeSelf);
+            else
+            {
+                notePaper.SetActive(true);
+                textToNotePaper.SetActive(false);
+            }
+            
+        }
+
+        public void ShowTextToSelectedNote()
+        {
+            if (selectedNote == "")
+            {
+                textToNotePaper.SetActive(false);
+                _textToNote.text = "";
+            }
+            
+            string clearNote = selectedNote.Replace(_tagStart, "").Replace(_tagEnd, "");
+            string t = _userData.GetTextToNote(clearNote, currentChapter);
+            if (t != "")
+            {
+                textToNotePaper.SetActive(true); 
+                _textToNote.text = t;
+            }
+            else
+            {
+                textToNotePaper.SetActive(false); 
+            }
         }
         
+        public void PaperTextUpdate()
+        {
+            if (selectedNote == "")
+            {
+                return;
+            }
+            
+            string clearNote = selectedNote.Replace(_tagStart, "").Replace(_tagEnd, "");
+            string t = _userData.GetTextToNote(clearNote, currentChapter);
+            if (t != "")
+            {
+                notePaperInputField.text = t;
+            }
+
+        }
         //=================== SEARCH ========================
         
         public void SearchWholeBook()
         {
             string text = searchInputField.text;
-            List<List<string>> allSentences = new List<List<string>>();
-            if (text.Length != 0)
+            if (text.Length < 2)
             {
-                for (int i = 0; i < _userData.chaptersCount; i++)
-                {
-                    string[] sentences = stringChapters[i].text.Split(new char[] { '.', '?', '!' });
-                    List<string> chapterSentences = new List<string>();
-
-                    foreach (string sentence in sentences)
-                    {
-                        if (sentence.Contains(text))
-                        {
-                            chapterSentences.Add(sentence);
-                        }
-                    }
-                    allSentences.Add(chapterSentences);
-                }
+                Debug.Log("here");
+                DestroySearchResults();
+                searchInputField.text = "";
+                noMatchFound.SetActive(true);
+                return;
             }
+
+            noMatchFound.SetActive(false);
+            
+            List<List<string>> allSentences = new List<List<string>>();
+            
+
+            for (int i = 0; i < _userData.chaptersCount; i++)
+            {
+                string[] sentences = stringChapters[i].text.Split(new char[] { '.', '?', '!' });
+                List<string> chapterSentences = new List<string>();
+
+                foreach (string sentence in sentences)
+                {
+                    if (sentence.Contains(text))
+                    {
+                        chapterSentences.Add(sentence);
+                    }
+                }
+                allSentences.Add(chapterSentences);
+            }
+            
             
             ShowSearchResults(allSentences);
         }
+        
+        
 
         private void ShowSearchResults(List<List<string>> allSentences)
         {
             DestroySearchResults();
-            if (allSentences.Count == 0)
+            //listOfLists.All(lst => lst.Count == 0)
+            //if (allSentences.Count == 0)
+            if (allSentences.All(lst => lst.Count == 0))
             {
+                noMatchFound.SetActive(true);
                 return;
             }
             for (int i = 0; i < _userData.chaptersCount; i++)
@@ -539,7 +673,16 @@ namespace TabletScripts
 
             ShowPageNumber();
             search.SetActive(false);
-        }        
+        }   
+        
+        public void UpdateSearchResult()
+        {
+            if (searchInputField.text.Length == 0)
+            {
+                DestroySearchResults();
+            }
+            noMatchFound.SetActive(false);
+        }
         
         //=================== JSON ========================
         public void LoadUserData()

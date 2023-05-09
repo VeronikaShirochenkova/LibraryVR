@@ -50,7 +50,9 @@ namespace BookScripts
         {
             foreach (var mesh in meshes)
             {
-                mesh.GetComponent<MeshRenderer>().material.color = _assets[index].Item1;
+                int idx = mesh.GetComponent<MeshRenderer>().materials.Length - 1;
+                mesh.GetComponent<MeshRenderer>().materials[idx].color = _assets[index].Item1;
+                //mesh.GetComponent<MeshRenderer>().material.color = _assets[index].Item1;
             }
             
 
@@ -81,3 +83,4 @@ namespace BookScripts
         }
     }
 }
+
