@@ -1,4 +1,5 @@
 using System.Text.RegularExpressions;
+using BookScripts;
 using ScrollTextScripts;
 using TMPro;
 using UnityEngine;
@@ -33,6 +34,15 @@ namespace ScrollView
         [SerializeField] private GameObject noteWriteButton;
         [SerializeField] private GameObject noteDeleteButton;               // delete existing note
         [SerializeField] private GameObject noteRetellingButton;
+        
+        [Header("Keyboard and Papers")] 
+        [SerializeField] private GameObject keyboard;
+        [SerializeField] private GameObject paperText;
+        [SerializeField] private GameObject paperInput;
+        
+        
+        // User data
+        private UserData _userData;
 
         // indices of first and last char of word which will be highlighted
         private int _head;
@@ -52,7 +62,7 @@ namespace ScrollView
             _head = -1;
             _tail = -1;
             _color = new Color32(0, 105, 203, 251);
-            _tagsRegex = new Regex(@"<font=""Brass Mono SDF""><mark=#767EE190>(.*?)<\/mark>", RegexOptions.Singleline);
+            _tagsRegex = new Regex(@"<font=""Brass Mono""><mark=#767EE190>(.*?)<\/mark>", RegexOptions.Singleline);
             
             page.ForceMeshUpdate();
         }
@@ -101,8 +111,7 @@ namespace ScrollView
                 // get indices of first and last char on current page 
                 var firstChar = _startIndex;
                 var lastChar = _endIndex;
-                
-                
+
                 int i = firstChar;
                 while(i <= lastChar)
                 {
@@ -126,6 +135,9 @@ namespace ScrollView
                     {
                         if (ClickOnNote(cInfo))
                         {
+                            noteWriteButton.SetActive(true);
+                            textDisplay.PaperTextUpdate();
+                            noteSaveButton.SetActive(true);
                             break;
                         }
 
@@ -133,6 +145,12 @@ namespace ScrollView
                         {
                             textDisplay.selectedNote = "";
                             noteDeleteButton.SetActive(false);
+                            noteWriteButton.SetActive(false);
+                            noteSaveButton.SetActive(false);
+
+                            PaperAndKeyboardDeactivate();
+                            
+                            textDisplay.ShowTextToSelectedNote();
                         }
                         break;
                     }
@@ -145,10 +163,24 @@ namespace ScrollView
                 if (noteDeleteButton.activeSelf)
                 {
                     textDisplay.selectedNote = "";
+                    
                     noteDeleteButton.SetActive(false);
+                    noteWriteButton.SetActive(false);
+                    noteSaveButton.SetActive(false);
+
+                    PaperAndKeyboardDeactivate();
+                    
+                    textDisplay.ShowTextToSelectedNote();
                 }
             }
             
+        }
+        
+        private void PaperAndKeyboardDeactivate()
+        {
+            keyboard.SetActive(false);
+            paperText.SetActive(false);
+            paperInput.SetActive(false);
         }
         
         /**
@@ -168,7 +200,12 @@ namespace ScrollView
                         return true;
                     }
                     textDisplay.selectedNote = page.text.Substring(startIndex, endIndex - startIndex + 1);
+                    textDisplay.ShowTextToSelectedNote();
+                    
                     noteDeleteButton.SetActive(true);
+                    noteWriteButton.SetActive(true);
+                    noteSaveButton.SetActive(true);
+                    
                     return true;
                 }
             }

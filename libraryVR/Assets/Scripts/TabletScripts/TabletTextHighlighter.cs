@@ -131,10 +131,8 @@ namespace TabletScripts
                         {
                             // update input field
                             noteWriteButton.SetActive(true);
-
                             // update input field
                             textDisplay.PaperTextUpdate();
-                                
                             noteSaveButton.SetActive(true);
                             break;
                         }

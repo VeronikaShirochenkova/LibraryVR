@@ -27,7 +27,7 @@ public class HandController : MonoBehaviour
 
     private void teleportModeActivate(InputAction.CallbackContext obj)
     {
-        _xrDirectInteractor.enabled = false;
+        //_xrDirectInteractor.enabled = false;
 
         _xrRayInteractor.enabled = true;
         _actionBasedController.enableInputActions = true;

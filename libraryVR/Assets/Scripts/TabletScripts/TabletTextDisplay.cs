@@ -26,8 +26,7 @@ namespace TabletScripts
         [SerializeField] private GameObject noteSaveButton;
         [SerializeField] private GameObject noteCancelButton;
         [SerializeField] private GameObject noteWriteButton;
-
-        //[SerializeField] private GameObject noteWriteTools;
+        
         [SerializeField] private GameObject notePaper;
         private TMP_InputField notePaperInputField;
         [SerializeField] private GameObject noteKeyboard;
@@ -302,8 +301,6 @@ namespace TabletScripts
             var newButton = Instantiate(noteButtonPrefab, noteButtonParent.transform);
             int chap = currentChapter;
             newButton.GetComponent<HighlightedButtonController>().CreateButton(note, stringChapters[chap].title.TrimEnd());
-            //newButton.GetComponentInChildren<TMP_Text>().text = stringChapters[chap].title.TrimEnd() + ": " + note.highlightText;
-            
             newButton.GetComponent<Button>().onClick.AddListener(() => ShowPageWithSelectedNote(note, chap));
             _buttonNotes.Add(newButton);
         }    
@@ -625,8 +622,6 @@ namespace TabletScripts
             ShowSearchResults(allSentences);
         }
         
-        
-
         private void ShowSearchResults(List<List<string>> allSentences)
         {
             DestroySearchResults();
@@ -642,10 +637,11 @@ namespace TabletScripts
                 if (allSentences[i].Count == 0) continue;
                 foreach (var sentence in allSentences[i])
                 {
+                    int chap = i;
                     var newButton = Instantiate(searchResultButtonPrefab, searchResultButtonParent.transform);
                     newButton.GetComponentInChildren<TMP_Text>().text = sentence;
-                    int chap = i;
                     newButton.GetComponent<Button>().onClick.AddListener(() => ShowPageWithSelectedSentence(sentence, chap));
+                    
                     _buttonSearchResults.Add(newButton);
                 }
             }

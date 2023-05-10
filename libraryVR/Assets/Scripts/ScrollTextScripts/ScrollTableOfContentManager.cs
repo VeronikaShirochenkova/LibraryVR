@@ -46,6 +46,7 @@ namespace ScrollTextScripts
         private void SelectChapter(int index)
         {
             tablet.SetChapter(index, true);
+            ChangeTocVisibility();
         }
     
 

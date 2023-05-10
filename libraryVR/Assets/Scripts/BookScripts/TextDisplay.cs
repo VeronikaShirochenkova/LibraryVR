@@ -760,9 +760,6 @@ namespace BookScripts
                 noteRetellingButton.GetComponent<MoveObject>().MoveObjectOnClick();
             }
             
-            
-            //var inputNote = notePaper.GetComponentInChildren<TMP_InputField>();
-
             // deactivate "Save note" button
             noteSaveButton.GetComponent<MoveObject>().MoveObjectOnClick();
 
