@@ -28,6 +28,7 @@ namespace ScrollTextScripts
         [SerializeField] private GameObject scrollView;
         [SerializeField] private GameObject content;
         [SerializeField] private ScrollRect rect;
+        public AudioSource pageFlipSound;
 
         [Header("Page Settings")] 
         public GameObject settingsObject;
@@ -37,6 +38,7 @@ namespace ScrollTextScripts
         [SerializeField] private GameObject noteSaveButton;
         [SerializeField] private GameObject noteCancelButton;
         [SerializeField] private GameObject noteWriteButton;
+        public AudioSource sound;
         
         [SerializeField] private GameObject notePaper;
         private TMP_InputField notePaperInputField;
@@ -243,7 +245,7 @@ namespace ScrollTextScripts
             RectTransform viewport = scrollView.GetComponent<ScrollRect>().viewport;
             float num = scrollPage.rectTransform.rect.height / viewport.rect.height;
             num = ((num * 10) % 10 != 0) ? num + 1 : num;
-            Debug.Log(page + " " + num);
+
             float value = 1.0f - page / num;
             StartCoroutine(SetScrollPositionCoroutine(scrollView.GetComponent<ScrollRect>(), value));
             _currentPage = page;
@@ -327,6 +329,7 @@ namespace ScrollTextScripts
             {
                 textToNotePaper.SetActive(false);
                 _textToNote.text = "";
+                notePaperInputField.text = "";
             }
             
             string clearNote = selectedNote.Replace(_tagStart, "").Replace(_tagEnd, "");
@@ -351,6 +354,7 @@ namespace ScrollTextScripts
             scrollPage.text = scrollPage.text.Replace(selectedNote, clearNote);
             
             _userData.DeleteExistingNote(clearNote, currentChapter);
+            sound.Play();
             selectedNote = "";
             
             noteDeleteButton.SetActive(false);
@@ -374,9 +378,16 @@ namespace ScrollTextScripts
          */
         private void ShowPageWithSelectedNote(Note note, int chapter)
         {
+            var curr = currentChapter;
+            
             SetChapter(chapter, true);
             scrollPage.ForceMeshUpdate();
             int charIndex = stringChapters[currentChapter].text.IndexOf(note.highlightText, StringComparison.Ordinal);
+
+            if (curr != chapter)
+            {
+                pageFlipSound.Play();
+            }
 
             TMP_Text text = scrollPage;
             TMP_CharacterInfo charInfo = text.textInfo.characterInfo[charIndex];
@@ -458,6 +469,7 @@ namespace ScrollTextScripts
                 noteCancelButton.SetActive(false);
                 noteRetellingButton.SetActive(false);
             }
+            sound.Play();
             
             noteSaveButton.SetActive(false);
             noteWriteButton.SetActive(false);
@@ -580,7 +592,6 @@ namespace ScrollTextScripts
             string text = searchInputField.text;
             if (text.Length < 2)
             {
-                Debug.Log("here");
                 DestroySearchResults();
                 searchInputField.text = "";
                 noMatchFound.SetActive(true);
@@ -608,17 +619,19 @@ namespace ScrollTextScripts
             }
             
             
-            ShowSearchResults(allSentences);
+            ShowSearchResults(allSentences, text);
         }
 
-        private void ShowSearchResults(List<List<string>> allSentences)
+        private void ShowSearchResults(List<List<string>> allSentences, string request)
         {
             DestroySearchResults();
+            
             if (allSentences.All(lst => lst.Count == 0))
             {
                 noMatchFound.SetActive(true);
                 return;
             }
+            
             for (int i = 0; i < _userData.chaptersCount; i++)
             {
                 if (allSentences[i].Count == 0) continue;
@@ -626,8 +639,8 @@ namespace ScrollTextScripts
                 {
                     int chap = i;
                     var newButton = Instantiate(searchResultButtonPrefab, searchResultButtonParent.transform);
-                    newButton.GetComponentInChildren<TMP_Text>().text = sentence;
-                    newButton.GetComponent<Button>().onClick.AddListener(() => ShowPageWithSelectedSentence(sentence, chap));
+                    newButton.GetComponent<SearchResultButtonController>().CreateButton(stringChapters[chap].title.TrimEnd(), sentence, request);
+                    newButton.GetComponent<Button>().onClick.AddListener(() => ShowPageWithSelectedSentence(chap, sentence, request));
                     
                     _buttonSearchResults.Add(newButton);
                 }
@@ -645,14 +658,24 @@ namespace ScrollTextScripts
             _buttonSearchResults.Clear();
         }
         
-        private void ShowPageWithSelectedSentence(string sentence, int chapter)
+        private void ShowPageWithSelectedSentence(int chapter,string sentence, string request)
         {
+            var curr = currentChapter;
             SetChapter(chapter, true);
+            
+            if (curr != currentChapter)
+            {
+                pageFlipSound.Play();
+            }
+            
             scrollPage.ForceMeshUpdate();
             int charIndex = stringChapters[currentChapter].text.IndexOf(sentence, StringComparison.Ordinal);
-            Debug.Log(charIndex + "\n" + sentence);
+            int indexCStart = sentence.IndexOf(request, StringComparison.Ordinal) + charIndex;
+            int indexCEnd = indexCStart + request.Length - 1;
+            
             TMP_Text text = scrollPage;
-            TMP_CharacterInfo charInfo = text.textInfo.characterInfo[charIndex];
+            //TMP_CharacterInfo charInfo = text.textInfo.characterInfo[charIndex];
+            TMP_CharacterInfo charInfo = text.textInfo.characterInfo[indexCStart];
 
             float charYPos = charInfo.bottomLeft.y;
 
@@ -662,8 +685,26 @@ namespace ScrollTextScripts
             
             //scrollView.GetComponent<ScrollRect>().verticalNormalizedPosition = scrollPos;
             StartCoroutine(SetScrollPositionCoroutine(scrollView.GetComponentInChildren<ScrollRect>(), scrollPos));
-
+            StartCoroutine(PaintRequestPart(indexCStart, indexCEnd));
             search.SetActive(false);
+        }
+        
+        private IEnumerator PaintRequestPart(int requestStart, int requestEnd)
+        {
+            yield return new WaitForEndOfFrame();
+            
+            Color color = new Color(1f, 0.4f, 0.2f, 1f);
+
+            for (var i = requestStart; i <= requestEnd; i++)
+            {
+                var ch = scrollPage.textInfo.characterInfo[i];
+
+                scrollPage.textInfo.meshInfo[ch.materialReferenceIndex].colors32[ch.vertexIndex + 0] = color;
+                scrollPage.textInfo.meshInfo[ch.materialReferenceIndex].colors32[ch.vertexIndex + 1] = color;
+                scrollPage.textInfo.meshInfo[ch.materialReferenceIndex].colors32[ch.vertexIndex + 2] = color;
+                scrollPage.textInfo.meshInfo[ch.materialReferenceIndex].colors32[ch.vertexIndex + 3] = color;
+            }
+            scrollPage.UpdateVertexData(TMP_VertexDataUpdateFlags.Colors32);
         }
         
         public void UpdateSearchResult()
@@ -691,7 +732,6 @@ namespace ScrollTextScripts
             
             _userData.fontSizeScrollingPage = settings.currentFontSize;
             
-            Debug.Log("save: " + _currentPage);
             _userData.pageBookmarkScrollPage = _currentPage;
             _userData.chapterBookmarkScrollPage = currentChapter;
             

@@ -34,7 +34,8 @@ namespace TabletScripts
         [SerializeField] private GameObject keyboard;
         [SerializeField] private GameObject paperText;
         [SerializeField] private GameObject paperInput;
-        
+
+        public AudioSource sound;
         // User data
         private UserData _userData;
 
@@ -276,6 +277,7 @@ namespace TabletScripts
                             // Show buttons which save/remove new note
                             if (!noteSaveButton.activeSelf)
                             {
+                                sound.Play();
                                 noteSaveButton.SetActive(true);
                             }
 

@@ -9,6 +9,7 @@ namespace MenuScripts
     {
         public List<Texture2D> roomFormats;
         public List<string> roomFormatsNames;
+        public List<GameObject> hints;
 
         public DecalProjector projector;
         public TMP_Text roomFormatName;
@@ -26,6 +27,14 @@ namespace MenuScripts
             ShowRoomFormat();
         }
         
+        private void ShowHint()
+        {
+            for (int i = 0; i < hints.Count; i++)
+            {
+                hints[i].SetActive(i == roomIndex);
+            }
+        }
+        
         private void ShowRoomFormatNumber()
         {
             string text = (roomIndex+1) + " / " + _roomCount;
@@ -38,6 +47,7 @@ namespace MenuScripts
             roomFormatName.text = roomFormatsNames[roomIndex];
 
             ShowRoomFormatNumber();
+            ShowHint();
         }
 
         public void ShowNextFormat()

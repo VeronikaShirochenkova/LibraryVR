@@ -1,11 +1,14 @@
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using BookScripts;
 using chatGPT;
 using TMPro;
+using UnityEditor.PackageManager.Requests;
 using UnityEngine;
+using UnityEngine.Serialization;
 using UnityEngine.UI;
 
 namespace TabletScripts
@@ -36,12 +39,13 @@ namespace TabletScripts
         [SerializeField] private GameObject noteDeleteButton;               // delete existing selected note
         [SerializeField] private GameObject noteRetellingButton;
 
-        [Header("Note parts")] 
+        [Header("Highlighted")] 
         public GameObject highlightedWindow;
         public GameObject noteButtonPrefab;
         public GameObject noteButtonParent;
+        public AudioSource sound;
         private List<GameObject> _buttonNotes;
-        
+
         [Header("Book Search")]
         [SerializeField] private TMP_InputField searchInputField;
         public GameObject searchResultButtonPrefab;
@@ -345,11 +349,13 @@ namespace TabletScripts
          */
         private void ShowPageWithSelectedNote(Note note, int chapter)
         {
+            sound.Play();
+            
             SetChapter(chapter, true);
+            
             int charIndex = stringChapters[currentChapter].text.IndexOf(note.highlightText, StringComparison.Ordinal);
             int pageIndex = tabletPage.textInfo.characterInfo[charIndex].pageNumber + 1;
-
-
+            
             _currentPage = pageIndex;
             tabletPage.pageToDisplay = _currentPage;
 
@@ -431,18 +437,12 @@ namespace TabletScripts
             noteWriteButton.SetActive(false);
             
 
-            //noteWriteTools.SetActive(false);
+
             noteKeyboard.SetActive(false);
             notePaperInputField.text = "";
             notePaper.SetActive(false);
             selectedNote = "";
-            //textToNotePaper.SetActive(false);
-            
-            //// deactivate keyboard
-            //noteKeyboard.SetActive(false);
-            //// deactivate input field
-            //inputNote.text = "";
-            //notePaper.SetActive(false);
+
         }
         
         public void GetNoteForRetelling()
@@ -472,19 +472,10 @@ namespace TabletScripts
             // deactivate "retelling" button
             noteRetellingButton.SetActive(false);
             
-            //noteWriteTools.SetActive(false);
             noteKeyboard.SetActive(false);
             notePaper.SetActive(false);
             textToNotePaper.SetActive(false);
-            
-            //// deactivate keyboard
-            //noteKeyboard.SetActive(false);
-            //// deactivate input field
-            //var inputNote = notePaper.GetComponentInChildren<TMP_InputField>();
-            //inputNote.text = "";
-            //notePaper.SetActive(false);
-            
-            
+
             tabletPage.ForceMeshUpdate();
         }
         
@@ -591,7 +582,6 @@ namespace TabletScripts
             string text = searchInputField.text;
             if (text.Length < 2)
             {
-                Debug.Log("here");
                 DestroySearchResults();
                 searchInputField.text = "";
                 noMatchFound.SetActive(true);
@@ -619,19 +609,19 @@ namespace TabletScripts
             }
             
             
-            ShowSearchResults(allSentences);
+            ShowSearchResults(allSentences, text);
         }
         
-        private void ShowSearchResults(List<List<string>> allSentences)
+        private void ShowSearchResults(List<List<string>> allSentences, string request)
         {
             DestroySearchResults();
-            //listOfLists.All(lst => lst.Count == 0)
-            //if (allSentences.Count == 0)
+
             if (allSentences.All(lst => lst.Count == 0))
             {
                 noMatchFound.SetActive(true);
                 return;
             }
+            
             for (int i = 0; i < _userData.chaptersCount; i++)
             {
                 if (allSentences[i].Count == 0) continue;
@@ -639,9 +629,8 @@ namespace TabletScripts
                 {
                     int chap = i;
                     var newButton = Instantiate(searchResultButtonPrefab, searchResultButtonParent.transform);
-                    newButton.GetComponentInChildren<TMP_Text>().text = sentence;
-                    newButton.GetComponent<Button>().onClick.AddListener(() => ShowPageWithSelectedSentence(sentence, chap));
-                    
+                    newButton.GetComponent<SearchResultButtonController>().CreateButton(stringChapters[chap].title.TrimEnd(), sentence, request);
+                    newButton.GetComponent<Button>().onClick.AddListener(() => ShowPageWithSelectedSentence( chap, sentence, request));
                     _buttonSearchResults.Add(newButton);
                 }
             }
@@ -658,18 +647,44 @@ namespace TabletScripts
             _buttonSearchResults.Clear();
         }
         
-        private void ShowPageWithSelectedSentence(string sentence, int chapter)
+        private void ShowPageWithSelectedSentence(int chapter, string sentence, string request)
         {
+            sound.Play();
             SetChapter(chapter, true);
+            
             int charIndex = stringChapters[currentChapter].text.IndexOf(sentence, StringComparison.Ordinal);
-            int pageIndex = tabletPage.textInfo.characterInfo[charIndex].pageNumber + 1;
+
+            int indexCStart = sentence.IndexOf(request, StringComparison.Ordinal) + charIndex;
+            int indexCEnd = indexCStart + request.Length - 1;
+
+            int pageIndex = tabletPage.textInfo.characterInfo[indexCStart].pageNumber + 1;
+            
             
             _currentPage = pageIndex;
             tabletPage.pageToDisplay = _currentPage;
 
             ShowPageNumber();
+            StartCoroutine(PaintRequestPart(indexCStart, indexCEnd));
             search.SetActive(false);
-        }   
+        }  
+        
+        private IEnumerator PaintRequestPart(int requestStart, int requestEnd)
+        {
+            yield return new WaitForEndOfFrame();
+            
+            Color color = new Color(1f, 0.4f, 0.2f, 1f);
+
+            for (var i = requestStart; i <= requestEnd; i++)
+            {
+                var ch = tabletPage.textInfo.characterInfo[i];
+
+                tabletPage.textInfo.meshInfo[ch.materialReferenceIndex].colors32[ch.vertexIndex + 0] = color;
+                tabletPage.textInfo.meshInfo[ch.materialReferenceIndex].colors32[ch.vertexIndex + 1] = color;
+                tabletPage.textInfo.meshInfo[ch.materialReferenceIndex].colors32[ch.vertexIndex + 2] = color;
+                tabletPage.textInfo.meshInfo[ch.materialReferenceIndex].colors32[ch.vertexIndex + 3] = color;
+            }
+            tabletPage.UpdateVertexData(TMP_VertexDataUpdateFlags.Colors32);
+        }
         
         public void UpdateSearchResult()
         {

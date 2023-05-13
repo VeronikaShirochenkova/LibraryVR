@@ -10,6 +10,7 @@ namespace BookScripts
     {
         [Header("Book")]
         public TextDisplay book;
+        public AudioSource pageFlipSound;
         
         [Header("Chapter parts")]
         public GameObject buttonPrefab;
@@ -104,7 +105,22 @@ namespace BookScripts
          */
         private void SelectChapter(int index)
         {
+            int curr = book.currentChapter;
             book.SetChapter(index, true);
+            if (curr < index)
+            {
+                book.forwardSheet.SetActive(true);
+                StartCoroutine(book.TurnPageEvent());
+                pageFlipSound.Play();
+            }
+            else if (curr > index)
+            {
+                book.backSheet.SetActive(true);
+                StartCoroutine(book.TurnPageEvent());
+                pageFlipSound.Play();
+            }
+            
+            
         }
         
         /**

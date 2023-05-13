@@ -23,6 +23,7 @@ namespace BookScripts
         [SerializeField] private TMP_Text rightDisplayedPage;
         [SerializeField] private TMP_Text leftPageNumber;
         [SerializeField] private TMP_Text rightPageNumber;
+        public AudioSource pageFlipSound;
         
         [Header("Book Settings paper")]
         public GameObject settingsObject;
@@ -154,7 +155,7 @@ namespace BookScripts
             notePaperInputField = notePaper.GetComponentInChildren<TMP_InputField>();
         }
         //=================== ANIMATION ===========================
-        private IEnumerator TurnPageEvent()
+        public IEnumerator TurnPageEvent()
         {
             float elapsedTime = 0;
             float pageTurnTime = 0.9f;
@@ -214,26 +215,30 @@ namespace BookScripts
                 allSentences.Add(chapterSentences);
             }
             
-            ShowSearchResults(allSentences);
+            ShowSearchResults(allSentences, text);
         }
 
-        private void ShowSearchResults(List<List<string>> allSentences)
+        private void ShowSearchResults(List<List<string>> allSentences, string request)
         {
             DestroySearchResults();
+            
             if (allSentences.All(lst => lst.Count == 0))
             {
                 noMatchFound.SetActive(true);
                 return;
             }
+            
             for (int i = 0; i < _userData.chaptersCount; i++)
             {
                 if (allSentences[i].Count == 0) continue;
                 foreach (var sentence in allSentences[i])
                 {
-                    var newButton = Instantiate(searchResultButtonPrefab, searchResultButtonParent.transform);
-                    newButton.GetComponentInChildren<TMP_Text>().text = sentence;
                     int chap = i;
-                    newButton.GetComponent<Button>().onClick.AddListener(() => ShowPageWithSelectedSentence(sentence, chap));
+                    
+                    var newButton = Instantiate(searchResultButtonPrefab, searchResultButtonParent.transform);
+                    newButton.GetComponent<SearchResultButtonController>().CreateButton(stringChapters[chap].title.TrimEnd(), sentence, request);
+                    //newButton.GetComponentInChildren<TMP_Text>().text = sentence;
+                    newButton.GetComponent<Button>().onClick.AddListener(() => ShowPageWithSelectedSentence(chap, sentence, request));
                     _buttonSearchResults.Add(newButton);
                 }
             }
@@ -250,11 +255,19 @@ namespace BookScripts
             _buttonSearchResults.Clear();
         }
         
-        private void ShowPageWithSelectedSentence(string sentence, int chapter)
+        private void ShowPageWithSelectedSentence(int chapter, string sentence, string request)
         {
             SetChapter(chapter, true);
+            
+            
             int charIndex = stringChapters[currentChapter].text.IndexOf(sentence, StringComparison.Ordinal);
-            int pageIndex = leftDisplayedPage.textInfo.characterInfo[charIndex].pageNumber + 1;
+            //int pageIndex = leftDisplayedPage.textInfo.characterInfo[charIndex].pageNumber + 1;
+            
+            int indexCStart = sentence.IndexOf(request, StringComparison.Ordinal) + charIndex;
+            int indexCEnd = indexCStart + request.Length - 1;
+            
+            int pageIndex = leftDisplayedPage.textInfo.characterInfo[indexCStart].pageNumber + 1;
+            int page = pageIndex % 2 != 0 ? 0 : 1;
 
             if (pageIndex % 2 != 0)
             {
@@ -268,7 +281,29 @@ namespace BookScripts
                 leftDisplayedPage.pageToDisplay = _currentPage;
                 rightDisplayedPage.pageToDisplay = _currentPage + 1;
             }
+
             ShowPageNumber();
+            StartCoroutine(PaintRequestPart(indexCStart, indexCEnd, page));
+        }
+
+        private IEnumerator PaintRequestPart(int requestStart, int requestEnd, int pageIndicator)
+        {
+            yield return new WaitForEndOfFrame();
+            
+            var page = pageIndicator == 0 ? leftDisplayedPage : rightDisplayedPage;
+            
+            Color color = new Color(1f, 0.4f, 0.2f, 1f);
+
+            for (var i = requestStart; i <= requestEnd; i++)
+            {
+                var ch = page.textInfo.characterInfo[i];
+
+                page.textInfo.meshInfo[ch.materialReferenceIndex].colors32[ch.vertexIndex + 0] = color;
+                page.textInfo.meshInfo[ch.materialReferenceIndex].colors32[ch.vertexIndex + 1] = color;
+                page.textInfo.meshInfo[ch.materialReferenceIndex].colors32[ch.vertexIndex + 2] = color;
+                page.textInfo.meshInfo[ch.materialReferenceIndex].colors32[ch.vertexIndex + 3] = color;
+            }
+            page.UpdateVertexData(TMP_VertexDataUpdateFlags.Colors32);
         }
 
         public void UpdateSearchResult()
@@ -610,6 +645,7 @@ namespace BookScripts
             {
                 textToNotePaper.SetActive(false);
                 _textToNote.text = "";
+                notePaperInputField.text = "";
             }
             
             string clearNote = selectedNote.Replace(_tagStart, "").Replace(_tagEnd, "");
@@ -662,10 +698,25 @@ namespace BookScripts
          */
         private void ShowPageWithSelectedNote(Note note, int chapter)
         {
+            var curr = currentChapter;
+            
             SetChapter(chapter, true);
             int charIndex = stringChapters[currentChapter].text.IndexOf(note.highlightText, StringComparison.Ordinal);
             int pageIndex = leftDisplayedPage.textInfo.characterInfo[charIndex].pageNumber + 1;
 
+            if (curr < chapter)
+            {
+                forwardSheet.SetActive(true);
+                StartCoroutine(TurnPageEvent());
+                pageFlipSound.Play();
+            }
+            else if (curr > chapter)
+            {
+                backSheet.SetActive(true);
+                StartCoroutine(TurnPageEvent());
+                pageFlipSound.Play();
+            }
+            
             if (pageIndex % 2 != 0)
             {
                 _currentPage = pageIndex;

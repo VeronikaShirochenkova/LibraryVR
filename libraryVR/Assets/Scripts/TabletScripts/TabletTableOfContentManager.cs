@@ -15,6 +15,7 @@ namespace TabletScripts
         [Header("Chapter parts")]
         public GameObject buttonPrefab;
         public GameObject buttonParent;
+        public AudioSource sound;
 
         public GameObject tocCanvas;
 
@@ -52,6 +53,7 @@ namespace TabletScripts
          */
         private void SelectChapter(int index)
         {
+            sound.Play();
             tablet.SetChapter(index, true);
             ChangeTocVisibility();
         }

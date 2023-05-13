@@ -41,7 +41,7 @@ namespace BookScripts
         [SerializeField] private GameObject keyboard;
         [SerializeField] private GameObject paperText;
         [SerializeField] private GameObject paperInput;
-        
+        private TMP_InputField _inputField;
         
 
         public AudioSource sound;
@@ -71,7 +71,6 @@ namespace BookScripts
             // cause in 1st frame it's null
             displayedPage.ForceMeshUpdate();
 
-
             _saveButton = noteSaveButton.GetComponent<MoveObject>();
             _cancelButton = noteCancelButton.GetComponent<MoveObject>();
             _writeButton = noteWriteButton.GetComponent<MoveObject>();
@@ -91,6 +90,7 @@ namespace BookScripts
                     if (noteDeleteButton.activeSelf)
                     {
                         textDisplay.selectedNote = "";
+                        
                         _deleteButton.MoveObjectOnClick();
                         textDisplay.ShowTextToSelectedNote();
                     } 

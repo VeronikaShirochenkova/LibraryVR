@@ -11,7 +11,8 @@ namespace MenuScripts
     {
         public List <Texture2D> bookFormats;
         public List <string> bookFormatsNames;
-        
+        public List<GameObject> hints;
+
         public DecalProjector projector;
         public TMP_Text bookFormatName;
         public TMP_Text bookFormatNumber;
@@ -27,6 +28,14 @@ namespace MenuScripts
             ShowBookFormat();
         }
 
+        private void ShowHint()
+        {
+            for (int i = 0; i < hints.Count; i++)
+            {
+                hints[i].SetActive(i == bookIndex);
+            }
+        }
+
         private void ShowBookFormatNumber()
         {
             string text = (bookIndex+1) + " / " + _bookCount;
@@ -38,6 +47,7 @@ namespace MenuScripts
             projector.material.SetTexture("Base_Map", bookFormats[bookIndex]);
             bookFormatName.text = bookFormatsNames[bookIndex];
             ShowBookFormatNumber();
+            ShowHint();
         }
         
         public void ShowNextFormat()
