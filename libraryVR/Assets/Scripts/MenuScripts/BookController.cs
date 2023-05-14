@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.IO;
 using TMPro;
 using UnityEngine;
-using UnityEngine.SceneManagement;
 using VersOne.Epub;
 
 namespace MenuScripts
@@ -166,7 +165,8 @@ namespace MenuScripts
 
         private void ChangeScene()
         {
-            SceneManager.LoadScene(_sceneID);
+            //SceneManager.LoadScene(_sceneID);
+            SceneTransition.SwitchToScene(_sceneID);
         }
     }
 }

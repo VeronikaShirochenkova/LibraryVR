@@ -3,7 +3,6 @@ using System.IO;
 using BookScripts;
 using TMPro;
 using UnityEngine;
-using UnityEngine.Serialization;
 
 namespace TabletScripts
 {

@@ -5,10 +5,9 @@ using System.IO;
 using System.Linq;
 using BookScripts;
 using chatGPT;
+using MenuScripts;
 using TMPro;
-using UnityEditor.PackageManager.Requests;
 using UnityEngine;
-using UnityEngine.Serialization;
 using UnityEngine.UI;
 
 namespace TabletScripts

@@ -1,9 +1,7 @@
-using System;
 using System.Collections.Generic;
 using TMPro;
 using UnityEngine;
 using UnityEngine.Rendering.Universal;
-using UnityEngine.Serialization;
 
 namespace MenuScripts
 {

@@ -4,7 +4,6 @@ using BookScripts;
 using ScrollTextScripts;
 using TMPro;
 using UnityEngine;
-using UnityEngine.Serialization;
 
 namespace ScrollView
 {
