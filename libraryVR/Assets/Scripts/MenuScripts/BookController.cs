@@ -42,8 +42,6 @@ namespace MenuScripts
         
         private void ShowBookNumber()
         {
-            // string text = index + " / " + count;
-            // bookNumber.text = text;
             string text = (_currentIndex+1) + " / " + _displayedBooks.Count;
             bookNumber.text = text;
         }
@@ -121,11 +119,9 @@ namespace MenuScripts
             
             foreach (var book in _books)
             {
-                if (book.Title.Contains(inputStr, StringComparison.OrdinalIgnoreCase) || book.Author.Contains(inputStr, StringComparison.OrdinalIgnoreCase)) // if book title contains input string
+                if (book.Title.Contains(inputStr, StringComparison.OrdinalIgnoreCase) || 
+                    book.Author.Contains(inputStr, StringComparison.OrdinalIgnoreCase)) // if book title contains input string
                 {
-                    //_currentIndex = _books.IndexOf(book);
-                    //ChangeDisplayedBook(0);
-                    //break;
                     _displayedBooks.Add(book);
                 }
             }
@@ -165,7 +161,6 @@ namespace MenuScripts
 
         private void ChangeScene()
         {
-            //SceneManager.LoadScene(_sceneID);
             SceneTransition.SwitchToScene(_sceneID);
         }
     }

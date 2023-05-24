@@ -172,7 +172,6 @@ namespace ScrollTextScripts
                     num = ((num * 10) % 10 != 0) ? num + 1 : num;
                     
                     _userData.scrollPages[chapter].pages.Add((int)num);
-                    //Debug.Log(fontSize + " " + scrollPage.rectTransform.rect.height + " " + viewport.rect.height );
                 }
             }
 
@@ -195,7 +194,6 @@ namespace ScrollTextScripts
                     break;
                 }
             }
-            //Debug.Log("get: " + _currentPage);
             ShowPageNumber();
         }
         
@@ -211,17 +209,14 @@ namespace ScrollTextScripts
             LayoutRebuilder.ForceRebuildLayoutImmediate(scrollPage.GetComponent<RectTransform>());
             scrollPage.ForceMeshUpdate();
             
-
             if (index >= currentChapter || byContent)
             {
                 currentChapter = index;
                 
                 if (scrollPage.rectTransform.rect.height > scrollView.GetComponent<ScrollRect>().viewport.rect.height)
-                {
-                    //scrollView.GetComponentInChildren<ScrollRect>().verticalNormalizedPosition = 1f;
-                    StartCoroutine(SetScrollPositionCoroutine(scrollView.GetComponentInChildren<ScrollRect>(), 1f));
-                }
-                
+                    StartCoroutine(
+                        SetScrollPositionCoroutine(scrollView.GetComponentInChildren<ScrollRect>(), 1f)
+                        );
             }
             else if(index < currentChapter)
             {
@@ -241,8 +236,7 @@ namespace ScrollTextScripts
 
         public void SetPage(int page)
         {
-            
-            
+
             RectTransform viewport = scrollView.GetComponent<ScrollRect>().viewport;
             float num = scrollPage.rectTransform.rect.height / viewport.rect.height;
             num = ((num * 10) % 10 != 0) ? num + 1 : num;
@@ -252,8 +246,7 @@ namespace ScrollTextScripts
             _currentPage = page;
             ShowPageNumber();
         }
-
-
+        
         /**
          *  Set next chapter
          */
@@ -276,7 +269,6 @@ namespace ScrollTextScripts
         {
             highlightedWindow.SetActive(!highlightedWindow.activeSelf);
         }
-        
         private void AddAllNotesToNotePage()
         {
             _buttonNotes = new List<GameObject>();
@@ -297,7 +289,6 @@ namespace ScrollTextScripts
             }
             
         }
-        
         
         /**
          * Adds new saved note to page with all existing notes
@@ -381,25 +372,24 @@ namespace ScrollTextScripts
         {
             var curr = currentChapter;
             
+            // chapter set up
             SetChapter(chapter, true);
             scrollPage.ForceMeshUpdate();
+            
+            // get start index of note
             int charIndex = stringChapters[currentChapter].text.IndexOf(note.highlightText, StringComparison.Ordinal);
 
-            if (curr != chapter)
-            {
-                pageFlipSound.Play();
-            }
-
+            if (curr != chapter) pageFlipSound.Play();
+            
+            // get start symbol position
             TMP_Text text = scrollPage;
             TMP_CharacterInfo charInfo = text.textInfo.characterInfo[charIndex];
-
             float charYPos = charInfo.bottomLeft.y;
             
             var transformRect = text.rectTransform.rect;
             float times = transformRect.height - (transformRect.height/2.0f - charYPos);
             float scrollPos = times/transformRect.height;
-
-            //scrollView.GetComponent<ScrollRect>().verticalNormalizedPosition = scrollPos;
+            
             StartCoroutine(SetScrollPositionCoroutine(scrollView.GetComponentInChildren<ScrollRect>(), scrollPos));
             highlightedWindow.SetActive(false);
         }

@@ -86,11 +86,11 @@ namespace BookScripts
         private void SetPages()
         {
             _pageCount = _buttons.Count / 10;
-            if (_pageCount > 1)
+            
+            if (_buttons.Count > 10)
             {
                 _pageCount = (_buttons.Count % 10 == 0) ? _pageCount : _pageCount + 1;
-            
-                //previousButton.SetActive(true);
+                
                 nextButton.SetActive(true);
             
                 for (int i = 10; i < _buttons.Count; i++)

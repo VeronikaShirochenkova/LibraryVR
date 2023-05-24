@@ -130,7 +130,7 @@ namespace BookScripts
                     
                     TMP_CharacterInfo cInfo = displayedPage.textInfo.characterInfo[i];
 
-                    // get word position of char
+                    // get world position of char
                     Vector3 worldBottomLeft = transform.TransformPoint(cInfo.bottomLeft);
                     Vector3 worldBottomRight = transform.TransformPoint(cInfo.bottomRight);
                     Vector3 worldTopLeft = transform.TransformPoint(cInfo.topLeft);
