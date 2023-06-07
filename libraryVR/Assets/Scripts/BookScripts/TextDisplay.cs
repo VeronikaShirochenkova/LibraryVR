@@ -98,7 +98,6 @@ namespace BookScripts
         void Start()
         {
             _filePath = PlayerPrefs.GetString("selectedBook");
-            //_filePath = Application.dataPath + "/Resources/Books/NineteenEightyFour/1984_EN.epub";             // ok
             
             EPubBookReader reader = new EPubBookReader(_filePath);
             stringChapters = reader.GetAllChapters();
@@ -237,7 +236,6 @@ namespace BookScripts
                     
                     var newButton = Instantiate(searchResultButtonPrefab, searchResultButtonParent.transform);
                     newButton.GetComponent<SearchResultButtonController>().CreateButton(stringChapters[chap].title.TrimEnd(), sentence, request);
-                    //newButton.GetComponentInChildren<TMP_Text>().text = sentence;
                     newButton.GetComponent<Button>().onClick.AddListener(() => ShowPageWithSelectedSentence(chap, sentence, request));
                     _buttonSearchResults.Add(newButton);
                 }
@@ -261,7 +259,6 @@ namespace BookScripts
             
             
             int charIndex = stringChapters[currentChapter].text.IndexOf(sentence, StringComparison.Ordinal);
-            //int pageIndex = leftDisplayedPage.textInfo.characterInfo[charIndex].pageNumber + 1;
             
             int indexCStart = sentence.IndexOf(request, StringComparison.Ordinal) + charIndex;
             int indexCEnd = indexCStart + request.Length - 1;
@@ -540,7 +537,6 @@ namespace BookScripts
             {
                 _allNotesPageCount = (_buttonNotes.Count % 4 == 0) ? _buttonNotes.Count / 4 : (_buttonNotes.Count / 4) + 1;
             
-                //notePrevButton.SetActive(true);
                 noteNextButton.SetActive(true);
 
                 for (int i = 0; i < 4; i++)
@@ -616,7 +612,6 @@ namespace BookScripts
             var newButton = Instantiate(noteButtonPrefab, noteButtonParent.transform);
             int chap = currentChapter;
             newButton.GetComponent<HighlightedButtonController>().CreateButton(note, stringChapters[chap].title.TrimEnd());
-            //newButton.GetComponentInChildren<TMP_Text>().text = stringChapters[chap].title.TrimEnd() + ": " + note.highlightText;
             
             newButton.GetComponent<Button>().onClick.AddListener(() => ShowPageWithSelectedNote(note, chap));
             _buttonNotes.Add(newButton);

@@ -147,19 +147,14 @@ namespace BookScripts
                     {
                         if (ClickOnNote(cInfo))
                         {
-                            //if (!noteWriteButton.activeSelf)
-                            //{
+                            noteWriteButton.SetActive(true);
+                            _writeButton.MoveObjectOnClick();
                             
-                                noteWriteButton.SetActive(true);
-                                _writeButton.MoveObjectOnClick();
-                                
-                                // update input field
-                                textDisplay.PaperTextUpdate();
-                                
-                                noteSaveButton.SetActive(true);
-                                _saveButton.MoveObjectOnClick();
-                            //}
-
+                            // update input field
+                            textDisplay.PaperTextUpdate();
+                            
+                            noteSaveButton.SetActive(true);
+                            _saveButton.MoveObjectOnClick();
                             break;
                         }
 

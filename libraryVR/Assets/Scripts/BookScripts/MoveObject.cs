@@ -5,8 +5,8 @@ namespace BookScripts
 {
     public class MoveObject : MonoBehaviour
     {
-        public float moveDistance;              // Расстояние для перемещения объекта
-        public float moveSpeed;                 // Скорость перемещения объекта
+        public float moveDistance;
+        public float moveSpeed;
         public string axis;
         
         public bool needDeactivate;
@@ -14,8 +14,8 @@ namespace BookScripts
         
         private Vector3 _startPosition;
         private Vector3 offset;
-        public bool isMovingFromStart = false;      // Флаг для определения направления перемещения
-        private bool isMoving = false;          // Флаг для определения, находится ли объект в движении
+        public bool isMovingFromStart = false;
+        private bool isMoving = false;
     
 
         public void MoveObjectOnClick()
@@ -52,7 +52,6 @@ namespace BookScripts
             if (isMovingFromStart)                                       
             {
                 _startPosition = transform.localPosition;
-                //destination = new Vector3(_startPosition.x, _startPosition.y, _startPosition.z - moveDistance); 
                 destination = new Vector3(_startPosition.x, _startPosition.y, _startPosition.z) - offset * moveDistance; 
             }
             else                                                   
